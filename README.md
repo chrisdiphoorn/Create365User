@@ -1,4 +1,4 @@
-# Create365User.ps1
+# Create365User
 A PowerShell Script to create a new user to ActiveDirectory and Microsoft Office 365 Tenant.
 
 <sub> References: 
