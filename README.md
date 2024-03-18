@@ -1,11 +1,11 @@
 # Create365User 
 ## A PowerShell Script to create a new user to ActiveDirectory and Microsoft Office 365 Tenant
 
-**1.** You will need to gather the Microsoft 365 Tenant ID
+**1.** You will need to gather the Microsoft 365 Tenant ID.
 
-**2.** You will need to create a Azure App that has access to the Exchance
+**2.** You will need to create a Azure App that has access to the Exchange.
 
-**3.** You will need to create an Azure User who has access to the Mailbox 
+**3.** You will need to create an Azure User who has access to the Mailbox.
 MS Graph Scopes:  ` 'Mail.ReadWrite','Mail.ReadBasic.All, 'User.ReadWrite.All','Calendars.Read',','Application.ReadWrite.All','Directory.ReadWrite.All','MailboxSettings.Read','Contacts.ReadWrite','Directory.Read.All','User.Read.All','Organization.ReadWrite.All','Mail.Read','Calendars.ReadWrite','LicenseAssignment.ReadWrite.All','Mail.Send','MailboxSettings.ReadWrite','Organization.Read.All','Contacts.Read','Mail.ReadBasic','Group.ReadWrite.All' `
 
 **4.** You will need to create an Active Directory user which is a member of the "Domain Admin" Group.
