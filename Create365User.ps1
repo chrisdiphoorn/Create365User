@@ -39,7 +39,7 @@ function Get-CurrentPath
 
 $Default = $null
 $cfolder = Get-CurrentPath 
-$IniFile = "$($cFolder)Create365User.psw"
+$IniFile = "$($cFolder)Create365User.ini"
 IF([System.IO.File]::Exists($IniFile) -eq $true) {
 	$Default = Get-Content $IniFile | ConvertFrom-StringData
 }
