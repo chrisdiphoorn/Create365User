@@ -41,6 +41,10 @@ MS Graph Scopes:  `
 <sub>
 </sub> 
 
-**5.** Update the Create365User.ini file with all the sections filled out.
+**5.** Gather all the Tenants Licence IDs.
+<sub>
+</sub> 
+
+**5.** Update the Create365User.ini file using all the details previously gathered.
 <sub>
 </sub> 
