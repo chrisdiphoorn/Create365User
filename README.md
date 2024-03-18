@@ -1,6 +1,10 @@
 # Create365User 
 ## A PowerShell Script to create a new user to ActiveDirectory and Microsoft Office 365 Tenant
 
+<sub> References: 
+- [Microsoft.Online.SharePoint.PowerShell](https://learn.microsoft.com/en-us/powershell/module/sharepoint-online/connect-sposervice?view=sharepoint-ps)
+</sub> 
+
 **1.** You will need to gather the Microsoft 365 Tenant ID.
 <sub>
 - https://portal.azure.com/ 
@@ -13,9 +17,7 @@
 </sub>
 
 **3.** You will need to create an Azure User who has full access to the Tenants Sharepoint
-<sub>
-[Microsoft.Online.SharePoint.PowerShell](https://learn.microsoft.com/en-us/powershell/module/sharepoint-online/connect-sposervice?view=sharepoint-ps)
-</sub> 
+<sub> [Microsoft.Online.SharePoint.PowerShell](https://learn.microsoft.com/en-us/powershell/module/sharepoint-online/connect-sposervice?view=sharepoint-ps) </sub> 
 MS Graph Scopes:  `
 'Mail.ReadWrite'
 'Mail.ReadBasic.All 
