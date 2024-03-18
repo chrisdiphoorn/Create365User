@@ -11,28 +11,37 @@ ActiveDirectoryPassword = #EG: ActiveDirectory (Administrator) Password
 
 OUPath = #EG: OU=Users,OU=DOMAIN,DC=ad,DC=DOMAIN,DC=DOMAIN
 
+Company = #EG: ComapnyName
+WWW = #EG: www.company.domain
+Domain = #EG: domain.name
+SMTPServer = #EG: smtp.domain.name
+SendEmail = #EG: support@domain.name
+
+GroupOutlook = SG-OutlookSignature
+GroupAllStaff = SG-All Staff
+
 DefaultAUPostalCode = #EG: 4000
 DefaultAUstate = #EG: QLD
 DefaultAUstreetaddress = #EG: Unit x, x-x Street Name, Suburb
 DefaultAUcity = #EG: Brisbane
 DefaultAUcountry = #EG: Australia
 
-DefaultPHPostalCode = #EG: 2000
-DefaultPHstate = #EG: Pampanga
-DefaultPHstreetaddress = #EG Unit x, x-x Street Name, Suburb
-DefaultPHcity = #EG: Mabalacat
-DefaultPHcountry = #EG: Phillipines
+DefaultSecondPostalCode = #EG: 2000
+DefaultSecondstate = #EG: Pampanga
+DefaultSecondstreetaddress = #EG Unit x, x-x Street Name, Suburb
+DefaultSecondcity = #EG: Mabalacat
+DefaultSecondcountry = #EG: Phillipines
 
-SharepointGroups = #'Permission Name1', 'Permission Name2', 'Permission Name3', 'Permission Name4'
+SharepointGroups = #EG: 'Permission Name1', 'Permission Name2', 'Permission Name3', 'Permission Name4'
 SPAdminSite = #EG: https://communityname-admin.sharepoint.com
 SPSite = #EG: https://communityname.sharepoint.com
 
-LicenseE1 = #EG: 18181a46-0d4e-45cd-891e-60aabd171b4e
-LicenseE3 = #EG: 6fd2c87f-b296-42f0-b197-1e91e994b900
+LicenseE1 = #EG: 18181a46-0d4e-45cd-891e-60aabd4471b4e
+LicenseE3 = #EG: 6fd2c87f-b296-42f0-b197-1e91eee994b900
 LicenseE5 = 
-LicenseBP = #EG: f245ecc8-75af-4f8e-b61f-27d8114de5f3
-LicenseBE = #EG: 3b555118-da6a-4418-894f-7df1e2096870
-LicenseDefender = #EG: 4ef96642-f096-40de-a3e9-d83fb2f90211
-LicenseIntuneSuite = #EG: a929cd4d-8672-47c9-8664-159c1f322ba8
-LicenseVisioClient = #EG: c5928f49-12ba-48f7-ada3-0d743a3601d5
-LicenseNonProfitPortal = #EG: aa2695c9-8d59-4800-9dc8-12e01f1735af
+LicenseBP = #EG: f245ecc8-75af-4f8e-b61f-27dee14de5f3
+LicenseBE = #EG: 3b555118-da6a-4418-894f-7df1eee96870
+LicenseDefender = #EG: 4ef96642-f096-40de-a3e9-dr3fb2f90211
+LicenseIntuneSuite = #EG: a929cd4d-8672-47c9-86t4-159c1f322ba8
+LicenseVisioClient = #EG: c5928f49-12ba-48f7-adyy-0d743a3601d5
+LicenseNonProfitPortal = #EG: aa2695c9-8d59-48uu-9dc8-12e01f1735af
