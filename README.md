@@ -9,7 +9,7 @@
 
 **3.** You will need to create an Azure User who has access to the Mailbox.
 <sub> </sub> 
-MS Graph Scopes:  ` 'Mail.ReadWrite','Mail.ReadBasic.All, 'User.ReadWrite.All','Calendars.Read',','Application.ReadWrite.All','Directory.ReadWrite.All','MailboxSettings.Read','Contacts.ReadWrite','Directory.Read.All','User.Read.All','Organization.ReadWrite.All','Mail.Read','Calendars.ReadWrite','LicenseAssignment.ReadWrite.All','Mail.Send','MailboxSettings.ReadWrite','Organization.Read.All','Contacts.Read','Mail.ReadBasic','Group.ReadWrite.All' `
+MS Graph Scopes:  ` +'Mail.ReadWrite' +'Mail.ReadBasic.All +'User.ReadWrite.All' +'Calendars.Read' +'Application.ReadWrite.All' +'Directory.ReadWrite.All' +'MailboxSettings.Read' +'Contacts.ReadWrite'+'Directory.Read.All' +'User.Read.All' +'Organization.ReadWrite.All' +'Mail.Read' +'Calendars.ReadWrite' +'LicenseAssignment.ReadWrite.All' +'Mail.Send' +'MailboxSettings.ReadWrite' +'Organization.Read.All' +'Contacts.Read' +'Mail.ReadBasic' +'Group.ReadWrite.All' `
 
 **4.** You will need to create an Active Directory user which is a member of the "Domain Admin" Group.
 <sub> </sub> 
