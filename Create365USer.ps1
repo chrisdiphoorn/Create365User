@@ -639,8 +639,8 @@ Function PropperTitleCase($sometext)
 Function AddUserToGroup ($group, $dName, $Server) 
 {
 	
-	$ADusername = "powershell.admin"
-    $ADpassword = "uglyK!te72"
+    $ADusername = $script:ActiveDirectoryUsername
+    $ADpassword = $script:ActiveDirectoryPassword
     $ADsecurePassword = ConvertTo-SecureString $ADpassword -AsPlainText -Force
     $credential = New-Object System.Management.Automation.PSCredential ($ADusername, $ADsecurePassword)
 	
@@ -3253,33 +3253,33 @@ if($newuser -EQ "Y") {
 		$proxyAddresses = "SMTP:$($emaillowercase)"
 		
         $hashtable = @{
-			SamAccountName    = $loginname
-            UserPrincipalName = $emaillowercase
-            DisplayName       = $displayname
-		    Name       		  = $displayname
-            GivenName         = $firstname
-            Surname           = $lastname
-            AccountPassword   = $SecurePassword
-            StreetAddress     = $streetaddress
-            City              = $city
-            Company           = 'XXXXX'
-            PostalCode        = $postalcode
-            State             = $state 
-            Country           = $country
-            MobilePhone       = $phone
-            OfficePhone       = $directphone
-            Title             = $title
-            HomePage          = 'www.XXXX.com'
-            EmailAddress      = $emaillowercase
-            Department        = $department
-            Description       = "Created $($Today)"
-            Enabled           = $true
-            Path              = $OUPath
-            Manager           = $manager
-			ChangePasswordAtLogon = $false
-            PasswordNeverExpires  = $true
-			CannotChangePassword  = $false
-			OtherAttributes       = @{'proxyAddresses' = $proxyAddresses}
+		SamAccountName    = $loginname
+            	UserPrincipalName = $emaillowercase
+            	DisplayName       = $displayname
+	    	Name       		= $displayname
+            	GivenName         = $firstname
+            	Surname           = $lastname
+            	AccountPassword   = $SecurePassword
+            	StreetAddress     = $streetaddress
+            	City              = $city
+            	Company           = 'XXXXX'
+            	PostalCode        = $postalcode
+            	State             = $state 
+            	Country           = $country
+            	MobilePhone       = $phone
+            	OfficePhone       = $directphone
+            	Title             = $title
+            	HomePage          = 'www.XXXX.com'
+            	EmailAddress      = $emaillowercase
+            	Department        = $department
+            	Description       = "Created $($Today)"
+            	Enabled           = $true
+            	Path              = $OUPath
+            	Manager           = $manager
+		ChangePasswordAtLogon = $false
+            	PasswordNeverExpires  = $true
+		CannotChangePassword  = $false
+		OtherAttributes       = @{'proxyAddresses' = $proxyAddresses}
         }
         
         # Remove Blank Key Values from Hashtable. IE: If an option is not set then it wont be passed.
