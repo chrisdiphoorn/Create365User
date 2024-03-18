@@ -3,6 +3,7 @@
 
 <sub> References: 
 - [Microsoft.Online.SharePoint.PowerShell](https://learn.microsoft.com/en-us/powershell/module/sharepoint-online/connect-sposervice?view=sharepoint-ps)
+- https://learn.microsoft.com/en-us/powershell/module/microsoft.graph.authentication/invoke-mggraphrequest?view=graph-powershell-1.0
 </sub> 
 
 **1.** You will need to gather the Microsoft 365 Tenant ID.
