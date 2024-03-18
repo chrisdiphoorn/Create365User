@@ -40,6 +40,7 @@ function Get-CurrentPath
 $Default = $null
 $cfolder = Get-CurrentPath 
 $IniFile = "$($cFolder)Create365User.ini"
+# Read the INI File if it exists
 IF([System.IO.File]::Exists($IniFile) -eq $true) {
 	$Default = Get-Content $IniFile | ConvertFrom-StringData
 }
@@ -62,11 +63,11 @@ $AUcity = ""
 $AUcountry = ""
 
 #Default Address for a Philippines User
-$PHpostalcode = ""
-$PHstate = ""
-$PHstreetaddress = ""
-$PHcity = ""
-$PHcountry = ""
+$Secondpostalcode = ""
+$SecondState = ""
+$SecondStreetAddress = ""
+$SecondCity = ""
+$SecondCountry = ""
 
 #Sharepoint Details
 $SharepointGroups = @()
@@ -129,11 +130,11 @@ if($Default -ne $null) {
 	if($Default.DefaultAUcity) { $AUcity = $Default.DefaultAUcity}
 	if($Default.DefaultAUcountry) { $AUcountry = $Default.DefaultAUcountry}
 	
-	if($Default.DefaultSecondPostalCode) { $PHPostalCode= $Default.DefaultSecondPostalCode}
-	if($Default.DefaultSecondstate) { $PHstate= $Default.DefaultSecondstate}
-	if($Default.DefaultSecondstreetaddress) { $PHstreetaddress = $Default.DefaultSecondstreetaddress}
-	if($Default.DefaultSecondcity) { $PHcity = $Default.DefaultSecondcity}
-	if($Default.DefaultSecondcountry) { $PHcountry = $Default.DefaultSecondcountry}
+	if($Default.DefaultSecondPostalCode) { $Secondpostalcode= $Default.DefaultSecondPostalCode}
+	if($Default.DefaultSecondstate) { $SecondState= $Default.DefaultSecondstate}
+	if($Default.DefaultSecondstreetaddress) { $SecondStreetAddress = $Default.DefaultSecondstreetaddress}
+	if($Default.DefaultSecondcity) { $SecondCity = $Default.DefaultSecondcity}
+	if($Default.DefaultSecondcountry) { $SecondCountry = $Default.DefaultSecondcountry}
 	if($Default.Company) { $company = $Default.Company}
 	if($Default.WWW) { $WWW = $Default.WWW}
 	if($Default.Domain) { $EmailDomain = $Default.Domain}
@@ -774,7 +775,7 @@ function Dispose-All-Variables {
         }
 }
 
-#Ensure Powershell uses TLS when connecteing over the network.
+#Ensure Powershell uses TLS when connecting over the network.
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 Install-ModuleIfNotInstalled 'MSOnline' '1.1.183.66'
@@ -1478,7 +1479,7 @@ $ComboBox_Country.FlatStyle = "Flat"
 [void]$main_form.Controls.Add($ComboBox_Country)
 
 [void]$ComboBox_Country.Items.Add($AUcountry)
-[void]$ComboBox_Country.Items.Add($PHcountry)
+[void]$ComboBox_Country.Items.Add($SecondCountry)
 $ComboBox_Country.SelectedIndex = 0
 
 
@@ -1701,7 +1702,7 @@ $CheckBox_AccessMobileOrBrowser_Click = {
 
 $CheckBox_SecondOffice = New-Object System.Windows.Forms.CheckBox
 $posY = GetYLoc $getHeight 9 8
-$CheckBox_SecondOffice.Text = "This user is located in the $($PHcountry) Office"
+$CheckBox_SecondOffice.Text = "This user is located in the $($SecondCountry) Office"
 $CheckBox_SecondOffice.Location  = New-Object System.Drawing.Point($posX, $PosY)
 $CheckBox_SecondOffice.Width = 400
 $CheckBox_SecondOffice.Checked = $false
@@ -1725,10 +1726,10 @@ $CheckBox_SecondOffice_CheckStateChanged = {
 		$Label_PostCode.Visible = $True;
 		$Label_Country.Visible = $True;
 		$ComboBox_Country.SelectedIndex = 1
-		$TextBox_Address.Text = $PHstreetaddress;
-		$TextBox_City.Text = $PHcity;
-		$TextBox_State.Text = $PHState;
-		$TextBox_PostCode.Text = $PHpostalcode;
+		$TextBox_Address.Text = $SecondStreetAddress;
+		$TextBox_City.Text = $SecondCity;
+		$TextBox_State.Text = $SecondState;
+		$TextBox_PostCode.Text = $Secondpostalcode;
 		$TextBox_Address.visible = $True;
 		$TextBox_City.Visible = $True;
 		$TextBox_State.Visible = $True;
@@ -3397,9 +3398,9 @@ if($newuser -EQ "Y") {
 				}
 			} else {
 		
-				# Add user to the All Staff and Signatures Group as a bare minumum
-				$allstaffgroup = AddUserToGroup $AllStaffSigGroup $loginname $domserver
-				$outlookgroup = AddUserToGroup $OutlookSigGroup $loginname $domserver
+				# Add user to the All Staff and Signatures Group as a bare minumum...?
+				if($AllStaffSigGroup -ne "") { $allstaffgroup = AddUserToGroup $AllStaffSigGroup $loginname $domserver }
+				if($OutlookSigGroup -ne "") { $outlookgroup = AddUserToGroup $OutlookSigGroup $loginname $domserver }
 				
 				if ($allstaffgroup -eq $true) {
 					if($NewGroups) {
