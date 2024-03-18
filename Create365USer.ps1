@@ -74,20 +74,29 @@ $SPAdminSite = ''
 $SPSite = ''
 
 # License SKUid Details for Tenant: 
-$E1 = ""
-$E3 = ""
+$E1 = "18181a46-0d4e-45cd-891e-60aabd171b4e"
+$E3 = "6fd2c87f-b296-42f0-b197-1e91e994b900"
 $E5 = "" #None Purchased.
-$BP = ""
-$BE = ""
-$Defender = ""
-$IntuneSuite = ""
-$VisioClient = ""
-$NonProfitPortal = ""
+$BP = "f245ecc8-75af-4f8e-b61f-27d8114de5f3"
+$BE = "3b555118-da6a-4418-894f-7df1e2096870"
+$Defender = "4ef96642-f096-40de-a3e9-d83fb2f90211"
+$IntuneSuite = "a929cd4d-8672-47c9-8664-159c1f322ba8"
+$VisioClient = "c5928f49-12ba-48f7-ada3-0d743a3601d5"
+$NonProfitPortal = "aa2695c9-8d59-4800-9dc8-12e01f1735af"
+
+$company = ''
+$WWW = ''
+$EmailDomain = ''
+$SMTPServer = ''
+$SendEmailAddress = ''
+
+$AllStaffSigGroup = ''
+$OutlookSigGroup = ''
 
 if($Default -ne $null) {
 	if($Default.Tenant) { $script:Tenant = $Default.Tenant }
 	if($Default.AzureClientApp) { $script:AzureClientApp = $Default.AzureClientApp }
-	if($Default.AzureClientAppPassword) { $script:AzureClientApp = $Default.AzureClientAppPassword }
+	if($Default.AzureClientAppPassword) { $script:AzureClientPassword = $Default.AzureClientAppPassword }
 	if($Default.ConnectSPOServiceUser) { $script:ConnectSPOServiceUser = $Default.ConnectSPOServiceUser }
 	if($Default.ConnectSPOServicePassword ) { $script:ConnectSPOServicePassword = $Default.ConnectSPOServicePassword }
 	if($Default.ActiveDirectoryUsername) { $script:ActiveDirectoryUsername = $Default.ActiveDirectoryUsername }
@@ -120,11 +129,18 @@ if($Default -ne $null) {
 	if($Default.DefaultAUcity) { $AUcity = $Default.DefaultAUcity}
 	if($Default.DefaultAUcountry) { $AUcountry = $Default.DefaultAUcountry}
 	
-	if($Default.DefaultPHPostalCode) { $PHPostalCode= $Default.DefaultPHPostalCode}
-	if($Default.DefaultPHstate) { $PHstate= $Default.DefaultPHstate}
-	if($Default.DefaultPHstreetaddress) { $PHstreetaddress = $Default.DefaultPHstreetaddress}
-	if($Default.DefaultPHcity) { $PHcity = $Default.DefaultPHcity}
-	if($Default.DefaultPHcountry) { $PHcountry = $Default.DefaultPHcountry}
+	if($Default.DefaultSecondPostalCode) { $PHPostalCode= $Default.DefaultSecondPostalCode}
+	if($Default.DefaultSecondstate) { $PHstate= $Default.DefaultSecondstate}
+	if($Default.DefaultSecondstreetaddress) { $PHstreetaddress = $Default.DefaultSecondstreetaddress}
+	if($Default.DefaultSecondcity) { $PHcity = $Default.DefaultSecondcity}
+	if($Default.DefaultSecondcountry) { $PHcountry = $Default.DefaultSecondcountry}
+	if($Default.Company) { $company = $Default.Company}
+	if($Default.WWW) { $WWW = $Default.WWW}
+	if($Default.Domain) { $EmailDomain = $Default.Domain}
+	if($Default.SMTPServer) { $SMTPServer = $Default.SMTPServer}
+	if($Default.SendEmail) { $SendEmailAddress = $Default.SendEmail}
+	if($Default.GroupOutlook) { $OutlookSigGroup = $Default.GroupOutlook}
+	if($Default.GroupAllStaff) { $AllStaffSigGroup = $Default.GroupAllStaff}
 	
 }
 
@@ -639,8 +655,8 @@ Function PropperTitleCase($sometext)
 Function AddUserToGroup ($group, $dName, $Server) 
 {
 	
-    $ADusername = $script:ActiveDirectoryUsername
-    $ADpassword = $script:ActiveDirectoryPassword
+	$ADusername = "powershell.admin"
+    $ADpassword = "uglyK!te72"
     $ADsecurePassword = ConvertTo-SecureString $ADpassword -AsPlainText -Force
     $credential = New-Object System.Management.Automation.PSCredential ($ADusername, $ADsecurePassword)
 	
@@ -908,8 +924,8 @@ try {
 	$domserver = $domserver.toUpper()
 } catch { }
 	
-$sendmail = "support@tech.org"
-$lcsendmail = "support@tech.org"
+$sendmail = $SendEmailAddress
+$lcsendmail = $SendEmailAddress
 try {
       $searcher = [adsisearcher]"(samaccountname=$env:USERNAME)"
       if($searcher) {
@@ -1461,8 +1477,8 @@ $ComboBox_Country.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDown
 $ComboBox_Country.FlatStyle = "Flat"
 [void]$main_form.Controls.Add($ComboBox_Country)
 
-[void]$ComboBox_Country.Items.Add("Australia")
-[void]$ComboBox_Country.Items.Add("Philippines")
+[void]$ComboBox_Country.Items.Add($AUcountry)
+[void]$ComboBox_Country.Items.Add($PHcountry)
 $ComboBox_Country.SelectedIndex = 0
 
 
@@ -1536,7 +1552,7 @@ $CheckBox_UseLaptopOrPC_Click = {
 	
    if($CheckBox_UseLaptopOrPC.Checked -eq $False) {
 
-        $CheckBox_PhilippinesOffice.Checked = $False;
+        $CheckBox_SecondOffice.Checked = $False;
         $Label_Title.visible = $False;
 		$Label_Address.visible = $False;
 		$Label_City.Visible = $False;
@@ -1618,7 +1634,7 @@ $CheckBox_AccessMobileOrBrowser_Click = {
     if($CheckBox_AccessMobileOrBrowser.Checked -eq $True ) {
 
         $ComboBox_License.SelectedIndex = 0;
-        $CheckBox_PhilippinesOffice.Checked = $False;
+        $CheckBox_SecondOffice.Checked = $False;
         $Label_Title.visible = $False;
         $ComboBox_Title.visible = $False;
 		$Label_Address.visible = $False;
@@ -1683,21 +1699,21 @@ $CheckBox_AccessMobileOrBrowser_Click = {
 
 [void]$CheckBox_AccessMobileOrBrowser.Add_Click( $CheckBox_AccessMobileOrBrowser_Click )
 
-$CheckBox_PhilippinesOffice = New-Object System.Windows.Forms.CheckBox
+$CheckBox_SecondOffice = New-Object System.Windows.Forms.CheckBox
 $posY = GetYLoc $getHeight 9 8
-$CheckBox_PhilippinesOffice.Text = "This user is located in the Philippines Office"
-$CheckBox_PhilippinesOffice.Location  = New-Object System.Drawing.Point($posX, $PosY)
-$CheckBox_PhilippinesOffice.Width = 400
-$CheckBox_PhilippinesOffice.Checked = $false
-$CheckBox_PhilippinesOffice.font = $Form_Font
-$CheckBox_PhilippinesOffice.UseVisualStyleBackColor = $True
-$CheckBox_PhilippinesOffice.TabIndex = 12
-Set-Tooltip $CheckBox_PhilippinesOffice "The user will be issued with a Business Premium license."
-[void]$main_form.Controls.Add($CheckBox_PhilippinesOffice)
+$CheckBox_SecondOffice.Text = "This user is located in the $($PHcountry) Office"
+$CheckBox_SecondOffice.Location  = New-Object System.Drawing.Point($posX, $PosY)
+$CheckBox_SecondOffice.Width = 400
+$CheckBox_SecondOffice.Checked = $false
+$CheckBox_SecondOffice.font = $Form_Font
+$CheckBox_SecondOffice.UseVisualStyleBackColor = $True
+$CheckBox_SecondOffice.TabIndex = 12
+Set-Tooltip $CheckBox_SecondOffice "The user will be issued with a Business Premium license."
+[void]$main_form.Controls.Add($CheckBox_SecondOffice)
 
-$CheckBox_PhilippinesOffice_CheckStateChanged = {
+$CheckBox_SecondOffice_CheckStateChanged = {
 
-    if($CheckBox_PhilippinesOffice.Checked -eq $True ) {
+    if($CheckBox_SecondOffice.Checked -eq $True ) {
 
         $ComboBox_License.SelectedIndex = 4;
         $CheckBox_UseLaptopOrPC.Checked = $True;
@@ -1749,7 +1765,7 @@ $CheckBox_PhilippinesOffice_CheckStateChanged = {
     [System.Windows.Forms.Application]::DoEvents();
 }
 
-[void] $CheckBox_PhilippinesOffice.Add_CheckStateChanged( $CheckBox_PhilippinesOffice_CheckStateChanged )
+[void] $CheckBox_SecondOffice.Add_CheckStateChanged( $CheckBox_SecondOffice_CheckStateChanged )
 
 $CheckBox_SendEmail = New-Object System.Windows.Forms.CheckBox
 $posY = GetYLoc $getHeight 18 5
@@ -1838,7 +1854,7 @@ Set-Tooltip $TextBox_Mobile "The mobile phone is displayed in the users Email Si
 $TextBox_Mobile_LostFocus= {
 
 	#Format Number only if its an Australian Address
-	if($CheckBox_PhilippinesOffice -eq $False) {
+	if($CheckBox_SecondOffice -eq $False) {
 
 		$phone = $TextBox_Mobile.Text.replace(" ","");
 
@@ -1849,7 +1865,7 @@ $TextBox_Mobile_LostFocus= {
 		$TextBox_Mobile.Text = $phone;
 	}
 
-	if($CheckBox_PhilippinesOffice -eq $True) {
+	if($CheckBox_SecondOffice -eq $True) {
 
 		$phone = $TextBox_Mobile.Text.replace(" ","");
 
@@ -1900,7 +1916,7 @@ Set-Tooltip $TextBox_Phone "The direct phone is displayed in the users Email Sig
 $TextBox_Phone_LostFocus = {
 
 	#Format Number only if its an Australian Address
-	if($CheckBox_PhilippinesOffice -eq $False) {
+	if($CheckBox_SecondOffice -eq $False) {
 
 		$phone = $TextBox_Phone.Text.replace(" ","");
 		if ($phone.Length -eq 10) { $phone= ([int64]$phone).ToString('0# #### ####') }
@@ -1998,7 +2014,7 @@ $ComboBox_DomainName.BackColor= $TextBoxBackColor
 $ComboBox_DomainName.ForeColor = $ForeColor
 $ComboBox_DomainName.FlatStyle = "Flat"
 $ComboBox_DomainName.Font = $TextBoxFont
-$ComboBox_DomainName.Text = $WWW  #Default Option
+$ComboBox_DomainName.Text = $EmailDomain  #Default Option
 $ComboBox_DomainName.Enabled = $false
 $ComboBox_DomainName.TabIndex = 2
 
@@ -2024,7 +2040,7 @@ $okButton_Click = {
 
    if($TextBox_User.Text -eq "") {
 
-        [System.Windows.Forms.MessageBox]::Show("Please enter a 'User Name' to create the new user. `nEG: FirstName.LastName   (@$($WWW))", "ERROR: missing User Name",[System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error);
+        [System.Windows.Forms.MessageBox]::Show("Please enter a 'User Name' to create the new user. `nEG: FirstName.LastName   (@$($EmailDomain))", "ERROR: missing User Name",[System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error);
         $TextBox_User.Focus();
 
     } else {
@@ -2122,7 +2138,7 @@ $TextBox_Password.Text = CreatePassword 10
 # The background jobs run as new process and gather data from an active drirectory server and place results into combox boxes.
 Add-JobTracker -Name "GetManagerNames" `
     -JobScript {
-         get-aduser -SearchBase "OU=Users,OU=Joii,DC=ad,DC=joii,DC=org" -LDAPFilter '(!userAccountControl:1.2.840.113556.1.4.803:=2)' -Properties Name
+         get-aduser -SearchBase $using:OUPath -LDAPFilter '(!userAccountControl:1.2.840.113556.1.4.803:=2)' -Properties Name
     }`
     -CompletedScript {
         Param($Job)
@@ -2220,7 +2236,7 @@ Add-JobTracker -Name "GetTitles" `
 
 Add-JobTracker -Name "GetAllUsers" `
     -JobScript {
-         get-aduser -SearchBase "OU=Users,OU=Joii,DC=ad,DC=joii,DC=org" -Filter "enabled -eq 'true'" # -filter *
+         get-aduser -SearchBase $using:OUPath -Filter "enabled -eq 'true'" # -filter *
     }`
     -CompletedScript {
         Param($Job)
@@ -2505,7 +2521,7 @@ if($TextBox_PostCode.Text) {
 	$postalcode = $AUpostalcode
 }
 
-if ($CheckBox_PhilippinesOffice.Checked -eq $true) { 
+if ($CheckBox_SecondOffice.Checked -eq $true) { 
     $phillpines = "Y"
     $country = "PH"
 }
@@ -2535,7 +2551,7 @@ if($newuser -EQ "N" ) {
     #Full Access - Connect-MgGraph -Scopes Directory.AccessAsUser.All, Directory.ReadWrite.All
 	
     # To get the Details of the Sigedin User: Invoke-MgGraphRequest -Method GET https://graph.microsoft.com/v1.0/me
-	  # Scope         = "https://graph.microsoft.com/.default"
+	# Scope         = "https://graph.microsoft.com/.default"
 	
     $Authenticated = (Get-MgContext -ErrorAction SilentlyContinue)
     
@@ -2546,9 +2562,9 @@ if($newuser -EQ "N" ) {
 
         try {
             
-            $TenantId = $script:Tenant  # aka Directory ID. This value is Microsoft tenant ID
-            $ClientId = $script:AzureClientApp  # aka Application ID
-            $ClientSecret = $script:AzureClientAppPassword  # aka key      VALUE:  7c0c029d-edf6-47bf-ab48-4e9e8f0cc5e2
+            $TenantId = "47d9998e-8245-40a4-bc4e-d7e64fb61b5b"  # aka Directory ID. This value is Microsoft tenant ID
+            $ClientId = "3233d265-1c9c-48bc-adcf-7773a9088ace"  # aka Application ID
+            $ClientSecret = "Vj78Q~qs9n6fP4uKA7oJS1ySI85iNbXQiOv~dalb"  # aka key      VALUE:  7c0c029d-edf6-47bf-ab48-4e9e8f0cc5e2
             #App Registration details
             $Body =  @{
                 Grant_Type    = "client_credentials"
@@ -2736,6 +2752,14 @@ if($newuser -EQ "N" ) {
         #        $errorOccured = $True
         #}
 
+        # Visio 2 - SKU - c5928f49-12ba-48f7-ada3-0d743a3601d5
+        # Defender 1 - SKU - 4ef96642-f096-40de-a3e9-d83fb2f90211
+    
+        # E3 - SKU 6fd2c87f-b296-42f0-b197-1e91e994b900  - ENTERPRISEPACK - E3
+        # E1 - SKU - 18181a46-0d4e-45cd-891e-60aabd171b4e  - STANDARDPACK - E1
+        # E5 - SKU - Unknown Add later if license are purchased
+        # 365 - SKU - 3b555118-da6a-4418-894f-7df1e2096870 - O365_BUSINESS_ESSENTIALS -Business Essentials 
+        # 365 - SKU - f245ecc8-75af-4f8e-b61f-27d8114de5f3 - O365_BUSINESS_PREMIUM - Business Premium
         # Get-MgUser -Filter "assignedLicenses/any(x:x/skuId eq 6fd2c87f-b296-42f0-b197-1e91e994b900)" -All
 
         #Setup License Calculation Variables
@@ -3011,7 +3035,7 @@ if($newuser -EQ "N" ) {
 				[System.Windows.Forms.Application]::DoEvents()
 				
 
-				if($CheckBox_PhilippinesOffice.Checked -eq $True ) {
+				if($CheckBox_SecondOffice.Checked -eq $True ) {
 				
 						$params = @{
 							"@odata.context" = "https://graph.microsoft.com/v1.0/$metadata#Me/mailboxSettings"
@@ -3128,7 +3152,7 @@ if($newuser -EQ "N" ) {
 							
 							$AuserName = $script:ConnectSPOServiceUser
 							$aPassword = $script:ConnectSPOServicePassword
-
+							
 							$cred = New-Object -TypeName System.Management.Automation.PSCredential -argumentlist $AuserName, $(convertto-securestring $aPassword -asplaintext -force)
 								
 							try {
@@ -3246,40 +3270,39 @@ if($newuser -EQ "Y") {
 
         $ADusername = $script:ActiveDirectoryUsername
         $ADpassword = $script:ActiveDirectoryPassword
-
         $ADsecurePassword = ConvertTo-SecureString $ADpassword -AsPlainText -Force
         $credential = New-Object System.Management.Automation.PSCredential ($ADusername, $ADsecurePassword)
 		
 		$proxyAddresses = "SMTP:$($emaillowercase)"
 		
         $hashtable = @{
-		SamAccountName    = $loginname
-            	UserPrincipalName = $emaillowercase
-            	DisplayName       = $displayname
-	    	Name       		= $displayname
-            	GivenName         = $firstname
-            	Surname           = $lastname
-            	AccountPassword   = $SecurePassword
-            	StreetAddress     = $streetaddress
-            	City              = $city
-            	Company           = 'XXXXX'
-            	PostalCode        = $postalcode
-            	State             = $state 
-            	Country           = $country
-            	MobilePhone       = $phone
-            	OfficePhone       = $directphone
-            	Title             = $title
-            	HomePage          = 'www.XXXX.com'
-            	EmailAddress      = $emaillowercase
-            	Department        = $department
-            	Description       = "Created $($Today)"
-            	Enabled           = $true
-            	Path              = $OUPath
-            	Manager           = $manager
-		ChangePasswordAtLogon = $false
-            	PasswordNeverExpires  = $true
-		CannotChangePassword  = $false
-		OtherAttributes       = @{'proxyAddresses' = $proxyAddresses}
+			SamAccountName    = $loginname
+            UserPrincipalName = $emaillowercase
+            DisplayName       = $displayname
+		    Name       		  = $displayname
+            GivenName         = $firstname
+            Surname           = $lastname
+            AccountPassword   = $SecurePassword
+            StreetAddress     = $streetaddress
+            City              = $city
+            Company           = $company
+            PostalCode        = $postalcode
+            State             = $state 
+            Country           = $country
+            MobilePhone       = $phone
+            OfficePhone       = $directphone
+            Title             = $title
+            HomePage          = $WWW
+            EmailAddress      = $emaillowercase
+            Department        = $department
+            Description       = "Created $($Today)"
+            Enabled           = $true
+            Path              = $OUPath
+            Manager           = $manager
+			ChangePasswordAtLogon = $false
+            PasswordNeverExpires  = $true
+			CannotChangePassword  = $false
+			OtherAttributes       = @{'proxyAddresses' = $proxyAddresses}
         }
         
         # Remove Blank Key Values from Hashtable. IE: If an option is not set then it wont be passed.
@@ -3375,21 +3398,21 @@ if($newuser -EQ "Y") {
 			} else {
 		
 				# Add user to the All Staff and Signatures Group as a bare minumum
-				$allstaffgroup = AddUserToGroup "SG-All Staff" $loginname $domserver
-				$outlookgroup = AddUserToGroup "SG-OutlookSignature-XXXX" $loginname $domserver
+				$allstaffgroup = AddUserToGroup $AllStaffSigGroup $loginname $domserver
+				$outlookgroup = AddUserToGroup $OutlookSigGroup $loginname $domserver
 				
 				if ($allstaffgroup -eq $true) {
 					if($NewGroups) {
-						$NewGroups = $NewGroups + ", SG-All Staff"
+						$NewGroups = $NewGroups + ", $($AllStaffSigGroup)"
 					} else {
-						$NewGroups = "SG-All Staff"
+						$NewGroups = $AllStaffSigGroup
 					}
 				}
 				if ($outlookgroup -eq $True) {
 					if($NewGroups) {
-						$NewGroups = $NewGroups + ", SG-OutlookSignature-XXX"
+						$NewGroups = $NewGroups + ", $($OutlookSigGroup)"
 					} else {
-						$NewGroups = "SG-OutlookSignature-XXX"
+						$NewGroups = $OutlookSigGroup
 					}
 				}
 		
@@ -3483,20 +3506,6 @@ if($sendmail -ne "" -and $created -eq $True) {
 		$tableuser.Rows.Add($row)
 	}
 	
-	#if($allstaffgroup -eq $true) {
-	#	$row = $tableuser.NewRow()
-    #    $row."Info" = "OU Group"
-    #    $row."Details" = "SG-ALL Staff"
-    #    $tableuser.Rows.Add($row)
-	#}
-	
-	#if($outlookgroup -eq $true) {
-	#	$row = $tableuser.NewRow()
-    #    $row."Info" = "OU Group"
-    #    $row."Details" = "SG-OutlookSignature-XXX"
-    #    $tableuser.Rows.Add($row)
-	#}
-	
     if($newuser -eq "N") {
 
         $row = $tableuser.NewRow()
@@ -3527,11 +3536,11 @@ if($sendmail -ne "" -and $created -eq $True) {
 	
     if($newuser -eq "Y") {      
 
-        $aSubject ="New Active Directory User - $($emaillowercase)"
+        $aSubject ="New $($company) Active Directory User - $($emaillowercase)"
 
     } else {
 
-        $aSubject ="New Microsoft Office 365 User - $($emaillowercase)"
+        $aSubject ="New $($company) Microsoft Office 365 User - $($emaillowercase)"
 
     }
 
@@ -3556,7 +3565,7 @@ if($sendmail -ne "" -and $created -eq $True) {
     $body += "</small>"
     
     try {
-          Send-MailMessage -To $sendmail -From 'newuser@XXXX.com' -Subject $aSubject -BodyAsHtml $Body -SmtpServer smtp.server.com -Port 25 -ErrorAction SilentlyContinue -WarningAction SilentlyContinue > $null
+          Send-MailMessage -To $sendmail -From "newuser@$($EmailDomain)" -Subject $aSubject -BodyAsHtml $Body -SmtpServer $SMTPServer -Port 25 -ErrorAction SilentlyContinue -WarningAction SilentlyContinue > $null
           $sentmail = $true
         } catch { $sentmail = $false }
 
@@ -3639,4 +3648,5 @@ $Content.Text = $newText
 $OpenFile.Save()
 
 #>
+
 
