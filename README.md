@@ -1,7 +1,7 @@
 # Create365User 
-## a PowerShell Script to add a new user to ActiveDirectory and 365
+## A PowerShell Script to create a new user to ActiveDirectory and Microsoft Office 365 Tenant
 
-**1.** You will need to gather the Micirtosoft 365 Tenant ID
+**1.** You will need to gather the Microsoft 365 Tenant ID
 
 **2.** You will need to create a Azure App that has access to the Exchance
 
