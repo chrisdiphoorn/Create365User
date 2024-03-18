@@ -1,6 +1,8 @@
 # Create365User
 A PowerShell Script to create a new user with ActiveDirectory and Microsoft Office 365 Tenant.
 
+![Screenshot of a Creae New 365 User.](https://github.com/chrisdiphoorn/)
+
 <sub> References: 
 - [Microsoft.Online.SharePoint.PowerShell](https://learn.microsoft.com/en-us/powershell/module/sharepoint-online/connect-sposervice?view=sharepoint-ps)
 - https://learn.microsoft.com/en-us/power-apps/developer/data-platform/walkthrough-register-app-azure-active-directory
