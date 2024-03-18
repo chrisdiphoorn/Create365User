@@ -37,6 +37,6 @@ MS Graph Scopes:  `
 'Mail.ReadBasic'
 'Group.ReadWrite.All' `
 
-**4.** You will need to create an Active Directory user which is a member of the "Domain Admin" Group.
+**4.** You will need to create an Active Directory user which is a member of the "Domain Admins" Group.
 <sub>
 </sub> 
