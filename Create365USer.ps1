@@ -908,8 +908,8 @@ try {
 	$domserver = $domserver.toUpper()
 } catch { }
 	
-$sendmail = "support@joiitech.org"
-$lcsendmail = "support@joiitech.org"
+$sendmail = "support@tech.org"
+$lcsendmail = "support@tech.org"
 try {
       $searcher = [adsisearcher]"(samaccountname=$env:USERNAME)"
       if($searcher) {
@@ -1998,7 +1998,7 @@ $ComboBox_DomainName.BackColor= $TextBoxBackColor
 $ComboBox_DomainName.ForeColor = $ForeColor
 $ComboBox_DomainName.FlatStyle = "Flat"
 $ComboBox_DomainName.Font = $TextBoxFont
-$ComboBox_DomainName.Text = "joii.org"  #Default Option
+$ComboBox_DomainName.Text = $WWW  #Default Option
 $ComboBox_DomainName.Enabled = $false
 $ComboBox_DomainName.TabIndex = 2
 
@@ -2024,7 +2024,7 @@ $okButton_Click = {
 
    if($TextBox_User.Text -eq "") {
 
-        [System.Windows.Forms.MessageBox]::Show("Please enter a 'User Name' to create the new user. `nEG: FirstName.LastName   (@joii.org)", "ERROR: missing User Name",[System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error);
+        [System.Windows.Forms.MessageBox]::Show("Please enter a 'User Name' to create the new user. `nEG: FirstName.LastName   (@$($WWW))", "ERROR: missing User Name",[System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error);
         $TextBox_User.Focus();
 
     } else {
@@ -2667,7 +2667,7 @@ if($newuser -EQ "N" ) {
             PasswordProfile   = $NewPasswordProfile
             MailNickName      = $loginname
             City              = $city
-            CompanyName       = 'Joii'
+            CompanyName       = $company
             GivenName         = $firstname
             Surname           = $lastname
             PostalCode        = $postalcode
@@ -3493,7 +3493,7 @@ if($sendmail -ne "" -and $created -eq $True) {
 	#if($outlookgroup -eq $true) {
 	#	$row = $tableuser.NewRow()
     #    $row."Info" = "OU Group"
-    #    $row."Details" = "SG-OutlookSignature-Joii"
+    #    $row."Details" = "SG-OutlookSignature-XXX"
     #    $tableuser.Rows.Add($row)
 	#}
 	
@@ -3527,11 +3527,11 @@ if($sendmail -ne "" -and $created -eq $True) {
 	
     if($newuser -eq "Y") {      
 
-        $aSubject ="New Joii Active Directory User - $($emaillowercase)"
+        $aSubject ="New Active Directory User - $($emaillowercase)"
 
     } else {
 
-        $aSubject ="New Joii Microsoft Office 365 User - $($emaillowercase)"
+        $aSubject ="New Microsoft Office 365 User - $($emaillowercase)"
 
     }
 
