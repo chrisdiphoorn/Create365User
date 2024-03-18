@@ -1,5 +1,5 @@
 ## Create365User 
-#a PowerShell Script to add a new user to ActiveDirectory and 365
+##a PowerShell Script to add a new user to ActiveDirectory and 365
 
 You will need to gather the Micirtosoft 365 Tenant ID
 
