@@ -2,7 +2,7 @@
 ## A PowerShell Script to create a new user to ActiveDirectory and Microsoft Office 365 Tenant
 
 **1.** You will need to gather the Microsoft 365 Tenant ID.
-<sub> </sub> 
+<sub> +https://portal.azure.com/ +Browse to Microsoft Entra ID > Properties. +Scroll down to the Tenant ID section and you can find your tenant ID</sub> 
 
 **2.** You will need to create a Azure App that has access to the Exchange.
 <sub> </sub>
