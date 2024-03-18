@@ -40,3 +40,7 @@ MS Graph Scopes:  `
 **4.** You will need to create an Active Directory user which is a member of the "Domain Admins" Group.
 <sub>
 </sub> 
+
+**5.** Update the Create365User.ini file with all the sections filled out.
+<sub>
+</sub> 
