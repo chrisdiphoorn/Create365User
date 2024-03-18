@@ -6,6 +6,8 @@
 - https://learn.microsoft.com/en-us/powershell/module/microsoft.graph.authentication/invoke-mggraphrequest?view=graph-powershell-1.0
 </sub> 
 
+# Instructions
+
 **1.** You will need to gather the Microsoft 365 Tenant ID.
 <sub>
 - https://portal.azure.com/ 
