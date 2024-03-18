@@ -12,8 +12,9 @@
 <sub>
 </sub>
 
-**3.** You will need to create an Azure User who has access to the Mailbox.
+**3.** You will need to create an Azure User who has full access to the Tenants Sharepoint
 <sub>
+[Microsoft.Online.SharePoint.PowerShell](https://learn.microsoft.com/en-us/powershell/module/sharepoint-online/connect-sposervice?view=sharepoint-ps)
 </sub> 
 MS Graph Scopes:  `
 'Mail.ReadWrite'
