@@ -5,13 +5,16 @@
 <sub>
 - https://portal.azure.com/ 
 - Browse to Microsoft Entra ID > Properties.
-- Scroll down to the Tenant ID section and you can find your tenant ID</sub> 
+- Scroll down to the Tenant ID section and you can find your tenant ID
+</sub> 
 
 **2.** You will need to create a Azure App that has access to the Exchange.
-<sub> </sub>
+<sub>
+</sub>
 
 **3.** You will need to create an Azure User who has access to the Mailbox.
-<sub> </sub> 
+<sub>
+</sub> 
 MS Graph Scopes:  `
 +'Mail.ReadWrite'
 +'Mail.ReadBasic.All 
@@ -35,4 +38,5 @@ MS Graph Scopes:  `
 +'Group.ReadWrite.All' `
 
 **4.** You will need to create an Active Directory user which is a member of the "Domain Admin" Group.
-<sub> </sub> 
+<sub>
+</sub> 
