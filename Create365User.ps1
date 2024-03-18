@@ -74,15 +74,15 @@ $SPAdminSite = ''
 $SPSite = ''
 
 # License SKUid Details for Tenant: 
-$E1 = "18181a46-0d4e-45cd-891e-60aabd171b4e"
-$E3 = "6fd2c87f-b296-42f0-b197-1e91e994b900"
+$E1 = ""
+$E3 = ""
 $E5 = "" #None Purchased.
-$BP = "f245ecc8-75af-4f8e-b61f-27d8114de5f3"
-$BE = "3b555118-da6a-4418-894f-7df1e2096870"
-$Defender = "4ef96642-f096-40de-a3e9-d83fb2f90211"
-$IntuneSuite = "a929cd4d-8672-47c9-8664-159c1f322ba8"
-$VisioClient = "c5928f49-12ba-48f7-ada3-0d743a3601d5"
-$NonProfitPortal = "aa2695c9-8d59-4800-9dc8-12e01f1735af"
+$BP = ""
+$BE = ""
+$Defender = ""
+$IntuneSuite = ""
+$VisioClient = ""
+$NonProfitPortal = ""
 
 $company = ''
 $WWW = ''
@@ -2729,7 +2729,7 @@ if($newuser -EQ "N" ) {
 			
 			if($ManagerID -AND $UserID) {
 				try {
-					Set-MgUserManagerByRef -UserId $UserID -AdditionalProperties @{ "@odata.id" = "https://graph.microsoft.com/v1.0/users/$ManagerID" }
+					$newman=(Set-MgUserManagerByRef -UserId $UserID -BodyParameter @{ "@odata.id" = "https://graph.microsoft.com/v1.0/users/$ManagerID" })
 					$errorOccured = $false
 				} catch { 
 					$errorMEssage = "ERROR - Could add a manager '$($manager)' to the users account."
@@ -3127,7 +3127,7 @@ if($newuser -EQ "N" ) {
 										[System.Windows.Forms.Application]::DoEvents()
 																					
 										try {
-											New-MgGroupMember -GroupId $groupID -DirectoryObjectId $UserID | Out-Null
+											$newmember=(New-MgGroupMember -GroupId $groupID -DirectoryObjectId $UserID | Out-Null)
 											$errorOccured = $False
 										} catch {
 											$message = $_
