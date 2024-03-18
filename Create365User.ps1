@@ -47,7 +47,7 @@ IF([System.IO.File]::Exists($IniFile) -eq $true) {
 
 $script:Tenant = ''
 $script:AzureClientApp = ''
-$script:AzureClientAppPassword = ''
+$script:AzureClientPassword = ''
 $script:ConnectSPOServiceUser = ''
 $script:ConnectSPOServicePassword = ''
 $script:ActiveDirectoryUsername = ''
@@ -97,7 +97,7 @@ $OutlookSigGroup = ''
 if($Default -ne $null) {
 	if($Default.Tenant) { $script:Tenant = $Default.Tenant }
 	if($Default.AzureClientApp) { $script:AzureClientApp = $Default.AzureClientApp }
-	if($Default.AzureClientAppPassword) { $script:AzureClientPassword = $Default.AzureClientAppPassword }
+	if($Default.AzureClientPassword) { $script:AzureClientPassword = $Default.AzureClientPassword }
 	if($Default.ConnectSPOServiceUser) { $script:ConnectSPOServiceUser = $Default.ConnectSPOServiceUser }
 	if($Default.ConnectSPOServicePassword ) { $script:ConnectSPOServicePassword = $Default.ConnectSPOServicePassword }
 	if($Default.ActiveDirectoryUsername) { $script:ActiveDirectoryUsername = $Default.ActiveDirectoryUsername }
@@ -2563,9 +2563,9 @@ if($newuser -EQ "N" ) {
 
         try {
             
-            $TenantId = "47d9998e-8245-40a4-bc4e-d7e64fb61b5b"  # aka Directory ID. This value is Microsoft tenant ID
-            $ClientId = "3233d265-1c9c-48bc-adcf-7773a9088ace"  # aka Application ID
-            $ClientSecret = "Vj78Q~qs9n6fP4uKA7oJS1ySI85iNbXQiOv~dalb"  # aka key      VALUE:  7c0c029d-edf6-47bf-ab48-4e9e8f0cc5e2
+            $TenantId = $script:Tenant #  # aka Directory ID. This value is Microsoft tenant ID
+            $ClientId = $script:AzureClientApp   # aka Application ID
+            $ClientSecret = $script:AzureClientPassword  # aka key      VALUE:  7c0c029d-edf6-47bf-ab48-4e9e8f0cc5e2
             #App Registration details
             $Body =  @{
                 Grant_Type    = "client_credentials"
