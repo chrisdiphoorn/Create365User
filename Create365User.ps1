@@ -5,29 +5,31 @@ Using Namespace System.Windows
 Using Namespace System.Windows.Forms
 Using Namespace System.Management.Automation
 
+#$DebugPreference = 'Continue'   		#Turn On Debug
+$DebugPreference = 'SilentlyContinue'   #Turn Off Debug
+
 # MTA - Multi-Threaded Apartment
 # STA - Single Threaded Apartment - for TextBox, ComboBox, DataGrid, Form Top = True
 # PowerShell.exe –STA
 $PowershellMode = $host.Runspace.ApartmentState
 
-# Update powershell to 7
-# iex "& { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"
-
 #if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) { Start-Process powershell.exe "-NoProfile -WindowStyle hidden -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs; exit }
 ##Requires -RunAsAdministrator
 
+$PSPolicy = 'RemoteSigned'  
+
 # You will need to be able to add new powershell modules if they are not already installed.
 $ExecPolicy = (Get-ExecutionPolicy -Scope CurrentUser)
-if($ExecPolicy -ne 'RemoteSigned') {
+if($ExecPolicy -ne $PSPolicy) {
 	try {
-		Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+		Set-ExecutionPolicy -ExecutionPolicy "$PSPolicy" -Scope CurrentUser
 	} catch {
-		#write-Host "This script needs to be run with the Powershell Excution policy RemoteSigned"
-		#write-host ""
-		#pause
-		#exit
+		write-Debug "This script needs to be run with the Powershell Excution policy $PSPolicy"
+		write-Debug ""
+		exit 1
 	}
 }
+
 
 function Get-CurrentPath
 	{
@@ -62,7 +64,7 @@ $AUstreetaddress = ""
 $AUcity = ""
 $AUcountry = ""
 
-#Default Address for a Philippines User
+#Default Address for a Second Country User
 $Secondpostalcode = ""
 $SecondState = ""
 $SecondStreetAddress = ""
@@ -90,10 +92,12 @@ $WWW = ''
 $EmailDomain = ''
 $SMTPServer = ''
 $SendEmailAddress = ''
+$FromEmailAddress = ''
 
 $AllStaffSigGroup = ''
 $OutlookSigGroup = ''
 
+# Get all the Default Values from the INI file contents
 if($Default -ne $null) {
 	if($Default.Tenant) { $script:Tenant = $Default.Tenant }
 	if($Default.AzureClientApp) { $script:AzureClientApp = $Default.AzureClientApp }
@@ -124,22 +128,30 @@ if($Default -ne $null) {
 	if ($Default.LicenseVisioClient) { $VisioClient = $Default.LicenseVisioClient}
 	if ($Default.LicenseNonProfitPortal) { $NonProfitPortal = $Default.LicenseNonProfitPortal}
 	
+	
 	if($Default.DefaultAUPostalCode) { $AUPostalCode= $Default.DefaultAUPostalCode}
 	if($Default.DefaultAUstate) { $AUstate= $Default.DefaultAUstate}
 	if($Default.DefaultAUstreetaddress) { $AUstreetaddress = $Default.DefaultAUstreetaddress}
 	if($Default.DefaultAUcity) { $AUcity = $Default.DefaultAUcity}
 	if($Default.DefaultAUcountry) { $AUcountry = $Default.DefaultAUcountry}
 	
+	if($Default.DefaultDL) { $DefaultDL = $Default.DefaultDL}
+	
 	if($Default.DefaultSecondPostalCode) { $Secondpostalcode= $Default.DefaultSecondPostalCode}
 	if($Default.DefaultSecondstate) { $SecondState= $Default.DefaultSecondstate}
 	if($Default.DefaultSecondstreetaddress) { $SecondStreetAddress = $Default.DefaultSecondstreetaddress}
 	if($Default.DefaultSecondcity) { $SecondCity = $Default.DefaultSecondcity}
 	if($Default.DefaultSecondcountry) { $SecondCountry = $Default.DefaultSecondcountry}
+	
+	if($Default.DefaultSecondaryDL) { $DefaultSecondaryDL = $Default.DefaultSecondaryDL}
+	
+	
 	if($Default.Company) { $company = $Default.Company}
 	if($Default.WWW) { $WWW = $Default.WWW}
 	if($Default.Domain) { $EmailDomain = $Default.Domain}
 	if($Default.SMTPServer) { $SMTPServer = $Default.SMTPServer}
 	if($Default.SendEmail) { $SendEmailAddress = $Default.SendEmail}
+	if($Default.FromEmail) { $FromEmailAddress = $Default.FromEmail}
 	if($Default.GroupOutlook) { $OutlookSigGroup = $Default.GroupOutlook}
 	if($Default.GroupAllStaff) { $AllStaffSigGroup = $Default.GroupAllStaff}
 	
@@ -263,11 +275,10 @@ try {
         exit
     }
 
-# Enable Windows Forms Visual Styles - Picks up the themed from the operating system
+# Enable Windows Forms Visual Styles - Picks up the theme from the operating system
 [System.Windows.Forms.Application]::EnableVisualStyles() 
 
-
-# Set up the GUI Variables ***************************************************************************************
+# Set up the GUI Variables ********************************************************************************************************************
 
 # Font styles are: Regular, Bold, Italic, Underline, Strikeout
 $Font12 = New-Object System.Drawing.Font("Segoe UI",12,[System.Drawing.FontStyle]::Regular)
@@ -275,6 +286,7 @@ $Font10B = New-Object System.Drawing.Font("Segoe UI",10,[System.Drawing.FontStyl
 $Font10 = New-Object System.Drawing.Font("Segoe UI",10,[System.Drawing.FontStyle]::Regular)
 $Font9 = New-Object System.Drawing.Font("Segoe UI",9,[System.Drawing.FontStyle]::Regular)
 $Font8 = New-Object System.Drawing.Font("Segoe UI",8,[System.Drawing.FontStyle]::Regular)
+$Font7 = New-Object System.Drawing.Font("Segoe UI",7,[System.Drawing.FontStyle]::Regular)
 $Font14B = New-Object System.Drawing.Font("Segoe UI",14,[System.Drawing.FontStyle]::Bold)
 $Tick_Font = New-Object System.Drawing.Font("Segoe UI",16,[System.Drawing.FontStyle]::Bold)
 
@@ -307,12 +319,14 @@ $Script:GUIFormObjectList = @()
 
 # Create an array to hold all gui starting enabled objects - #A Reset will put them back to these values.
 $Script:GUIEnabledObjectList = @() 
+$Script:FormLoadingInfo= New-Object 'System.Windows.Forms.Label'
 
 # Create new Loading Form - using the shadow function.
 $formLoading = New-Object Program.Shadow
 $labelLoading = New-Object 'System.Windows.Forms.Label'
+$subLabelLoading = New-Object 'System.Windows.Forms.Label'
+
 $InitialFormWindowState = New-Object 'System.Windows.Forms.FormWindowState'
-  
    
 $Form_StateCorrection_Load =
   {
@@ -334,11 +348,12 @@ $Form_Cleanup_FormClosed =
   
 $formloading.Font = $Font14B
 
-$ScriptText = " Loading $($ScriptName) - Please wait... "
+$ScriptText = " Loading $($ScriptName) - Please Wait... "
 $aSize = [System.Windows.Forms.TextRenderer]::MeasureText($ScriptText, $Font14B)
 [int]$getWidth = $aSize.width+ 4 
   
 [void]$formLoading.Controls.Add($labelLoading)
+[void]$formLoading.Controls.Add($SUBlabelLoading)
 
 $formLoading.BackColor = $BackColor
 $formLoading.ForeColor = $ForeColor
@@ -353,13 +368,24 @@ $formLoading.ShowInTaskbar = $False
 $formLoading.StartPosition = 'CenterScreen'
 $formLoading.Text = ""
 $formLoading.AutoSize = $true
-$formLoading.ClientSize = "$($getWidth), 41"
+$formLoading.ClientSize = "$($getWidth), 51"
  
 # Create a label to show on the form
 $labelLoading.Location = '5, 5'
-$labelLoading.Size = "$getWidth, 36"
+$labelLoading.Size = "$getWidth, 28"
 $labelLoading.TabIndex = 0
+$labelLoading.Name = "Message"
 $labelLoading.Text = $ScriptText
+
+$subLabelLoading.Location = '5, 32'
+$subLabelLoading.Size = "$($getWidth -10), 16"
+$subLabelLoading.TabIndex = 0
+$subLabelloading.Font = $Font7
+$subLabelLoading.TextAlign = [System.Drawing.ContentAlignment]::MiddleRight
+$subLabelLoading.Name = "Info"
+$subLabelLoading.Text = "Installing Powershell Modules"
+
+$Script:FormLoadingInfo = $subLabelLoading
 
 [void]$formLoading.ResumeLayout()
 [System.Windows.Forms.Application]::DoEvents()
@@ -415,6 +441,9 @@ Function Install-ModuleIfNotInstalled(
 		[boolean] [Parameter(mandatory=$false)] $AllowPrerelease = $False
 		)
 	{
+	
+	$Script:FormLoadingInfo.Text = "$moduleName Version $minimalVersion"
+	
     $module = Get-Module -Name $moduleName -ListAvailable | Where-Object { $null -eq $minimalVersion -or $minimalVersion -lt $_.Version } | Select-Object -Last 1
 
     if ($null -ne $module) {
@@ -656,8 +685,8 @@ Function PropperTitleCase($sometext)
 Function AddUserToGroup ($group, $dName, $Server) 
 {
 	
-	$ADusername = "powershell.admin"
-    $ADpassword = "uglyK!te72"
+	$ADusername = $script:ActiveDirectoryUsername
+    $ADpassword = $script:ActiveDirectoryPassword
     $ADsecurePassword = ConvertTo-SecureString $ADpassword -AsPlainText -Force
     $credential = New-Object System.Management.Automation.PSCredential ($ADusername, $ADsecurePassword)
 	
@@ -761,7 +790,9 @@ Function Remove_All_Controls($aForm)
 
     Foreach ($index in $indexes | Sort-Object -Descending)
 	{
-        $aForm.Controls.RemoveAt($index)
+		try {
+			$aForm.Controls.RemoveAt($index)
+		} catch {}
     }
 }
 
@@ -771,7 +802,9 @@ function Dispose-All-Variables {
             $_.Value -is [System.IDisposable]
         } |
         Foreach-Object {
-            $_.Value.Dispose() | Remove-Variable -Force
+			try {
+				$_.Value.Dispose() | Remove-Variable -Force
+			} catch {}
         }
 }
 
@@ -780,25 +813,29 @@ function Dispose-All-Variables {
 
 Install-ModuleIfNotInstalled 'MSOnline' '1.1.183.66'
 Install-ModuleIfNotInstalled 'ExchangeOnlineManagement' '3.2.0'
+Install-ModuleIfNotInstalled 'Microsoft.Graph.Authentication' '2.10.0'
 Install-ModuleIfNotInstalled 'Microsoft.Graph.Users' '2.10.0'
 Install-ModuleIfNotInstalled 'Microsoft.Graph.Groups' '2.10.0'
 Install-ModuleIfNotInstalled 'Microsoft.Graph.Identity.DirectoryManagement' '2.10.0'
 Install-ModuleIfNotInstalled 'Microsoft.Online.SharePoint.PowerShell' '16.0.24211.12000'
 Install-ModuleIfNotInstalled 'AzureAD' '2.0.2.180'
 
-#Install-ModuleIfNotInstalled 'Az' '10.0.0'
-
 Import-Module 'ActiveDirectory' -WarningAction SilentlyContinue
+Import-Module 'Microsoft.Graph.Authentication' -WarningAction SilentlyContinue
 Import-Module 'Microsoft.Graph.Users' -WarningAction SilentlyContinue
 Import-Module 'Microsoft.Graph.Groups' -WarningAction SilentlyContinue
 Import-Module 'Microsoft.Graph.Identity.DirectoryManagement' -WarningAction SilentlyContinue
 Import-Module 'ExchangeOnlineManagement' -WarningAction SilentlyContinue
+
 if($Host.Version -gt 5.2) {
 	Import-Module 'Microsoft.Online.SharePoint.PowerShell' -WarningAction SilentlyContinue -UseWindowsPowershell
 } else {
 	Import-Module 'Microsoft.Online.SharePoint.PowerShell' -WarningAction SilentlyContinue
 }
-Import-Module 'AzureAD'
+
+Import-Module 'AzureAD' -WarningAction SilentlyContinue
+
+cls
 
 # Create JobTrackers. This is run from a timer funtion , start tasks in background, and process results once finished.
 # The user can start entering in things on the form and the listboxes etc will become enabled with the results in a short time.
@@ -927,9 +964,11 @@ try {
 	
 $sendmail = $SendEmailAddress
 $lcsendmail = $SendEmailAddress
-try {
-      $searcher = [adsisearcher]"(samaccountname=$env:USERNAME)"
-      if($searcher) {
+
+if(!$sendmail) {
+	try {
+		$searcher = [adsisearcher]"(samaccountname=$env:USERNAME)"
+		if($searcher) {
             $checksendmail = $searcher.FindOne().Properties.mail
             if($checksendmail) {
                 $sendmail = $checksendmail
@@ -937,6 +976,7 @@ try {
             }
       }
     } catch { }
+}
 
 $domain = ""
 $domaindn = ""
@@ -2561,48 +2601,51 @@ if($newuser -EQ "N" ) {
     		
 	if(-not $Authenticated) {
 
-        try {
-            
-            $TenantId = $script:Tenant #  # aka Directory ID. This value is Microsoft tenant ID
-            $ClientId = $script:AzureClientApp   # aka Application ID
-            $ClientSecret = $script:AzureClientPassword  # aka key      VALUE:  7c0c029d-edf6-47bf-ab48-4e9e8f0cc5e2
-            #App Registration details
-            $Body =  @{
-                Grant_Type    = "client_credentials"
-                Scope         = "https://graph.microsoft.com/.default"
-                Client_Id     = $ClientID
-                Client_Secret = $ClientSecret
-            }
- 
-            $Connection = Invoke-RestMethod -Uri https://login.microsoftonline.com/$TenantID/oauth2/v2.0/token -Method Post -Body $body -TimeoutSec 30
-			##$Connection = Invoke-RestMethod -Uri https://login.microsoftonline.com/$TenantID/oauth2/v2.0/token -Method Post -ContentType "application/x-www-form-urlencoded" -Body $body -UseBasicParsing -TimeoutSec 30
+        $TenantId = $script:Tenant #  # aka Directory ID. This value is Microsoft tenant ID
+        $ClientId = $script:AzureClientApp   # aka Application ID
+        $ClientSecret = $script:AzureClientPassword  # aka key      VALUE:  7c0c029d-edf6-47bf-ab48-4e9e8f0cc5e2
+        #App Registration details
+        $Body =  @{
+            Grant_Type    = "client_credentials"
+            Scope         = "https://graph.microsoft.com/.default"
+            Client_Id     = $ClientID
+            Client_Secret = $ClientSecret
+        }
 		
-            #Get the Access Token 
-            $Token = $Connection.access_token
-			##$Token = ($Connection.Content | ConvertFrom-Json).access_token
+		$errorOccurred = $false
+        $Connection = Invoke-RestMethod -Uri https://login.microsoftonline.com/$TenantID/oauth2/v2.0/token -Method Post -Body $body -TimeoutSec 30
+		##$Connection = Invoke-RestMethod -Uri https://login.microsoftonline.com/$TenantID/oauth2/v2.0/token -Method Post -ContentType "application/x-www-form-urlencoded" -Body $body -UseBasicParsing -TimeoutSec 30
+		
+        #Get the Access Token 
+        $Token = $Connection.access_token
+		#$Token = ($Connection.Content | ConvertFrom-Json).access_token
 						
-			# Check if v1.0 or v2.0 of the Microsoft Graph PowerShell module
-			$targetParameter = (Get-Command Connect-MgGraph).Parameters['AccessToken']
-			if ($targetParameter.ParameterType -eq [securestring]){
-				
+		# Check if v1.0 or v2.0 of the Microsoft Graph PowerShell module
+		$targetParameter = (Get-Command Connect-MgGraph).Parameters['AccessToken']
+		if ($targetParameter.ParameterType -eq [securestring]){
+			try {
 				Connect-MgGraph -AccessToken ($Token |ConvertTo-SecureString -AsPlainText -Force) > $null
-				
-			} else {
-				
-                $connection = Connect-MgGraph -AccessToken $Token > $null
-				
+			} catch {
+				$errorOccurred = $true
 			}
 			
-            Start-Sleep -Seconds 1.5
+		} else {
+			try {
+               $connection = Connect-MgGraph -AccessToken $Token > $null
+			} catch {
+				$errorOccurred = $true
+			}
 			
-			# $scopes = Get-MgContext | Select-Object -ExpandProperty Scopes 
-			# $account = Get-MgContext | Select-Object -ExpandProperty Account
-			# if($account) { Write-host $account }
-			# if($scopes) { Write-host $scopes }	
+		}
 			
+        Start-Sleep -Seconds 1.5
 			
-         } catch {
-
+		# $scopes = Get-MgContext | Select-Object -ExpandProperty Scopes 
+		# $account = Get-MgContext | Select-Object -ExpandProperty Account
+		# if($account) { Write-host $account }
+		# if($scopes) { Write-host $scopes }	
+        
+		if($errorOccurred -eq $true) {
 			Write-Host "Authentication with Microsoft Graph Was Canceled or Failed."
 			Write-Host $_
 			
@@ -2613,8 +2656,7 @@ if($newuser -EQ "N" ) {
             Get-Event | Remove-Event
             Get-Variable | Remove-Variable -ErrorAction SilentlyContinue
             
-			
-            exit
+			exit
 
          }
 		 
@@ -2668,6 +2710,10 @@ if($newuser -EQ "N" ) {
 			$errorOccured = $True
 
 		}
+		
+		
+		
+	  
 	}
 	
     if (-not $ExistingMailbox -AND $errorOccured -eq $False) {
@@ -2713,7 +2759,7 @@ if($newuser -EQ "N" ) {
 
         } catch {
 
-            $message = $_test.user
+            $message = $_.Exception.Message
             $errorMEssage = "ERROR - Could not create a new email account $($emaillowercase) `n$($message)"
             $errorOccured = $True
 
@@ -2732,7 +2778,9 @@ if($newuser -EQ "N" ) {
 				try {
 					$newman=(Set-MgUserManagerByRef -UserId $UserID -BodyParameter @{ "@odata.id" = "https://graph.microsoft.com/v1.0/users/$ManagerID" })
 					$errorOccured = $false
+					Start-Sleep -Seconds 1
 				} catch { 
+					$message = $_.Exception.Message
 					$errorMEssage = "ERROR - Could add a manager '$($manager)' to the users account."
 					$errorOccured = $True
 				}
@@ -2743,7 +2791,7 @@ if($newuser -EQ "N" ) {
         $labelInfo.Text = "Retrieving Tenant 365 Licences."
         [System.Windows.Forms.Application]::DoEvents()
 		
-		# This sextion was required for V1.0 MS Graph
+		# This section was required for V1.0 MS Graph
         #try {
         #        Select-MgProfile v1.0
         #        $errorOccured = $False
@@ -2771,10 +2819,11 @@ if($newuser -EQ "N" ) {
         
         try {
             # Get a specific commercial subscription that the organization has acquired
-            $MsolSkus = Get-MgSubscribedSKU -All -Property @("SkuId", "SkuPartNumber", "ConsumedUnits", "PrepaidUnits") | Select-Object *, @{Name = "ActiveUnits"; Expression = { ($_ | Select-Object -ExpandProperty PrepaidUnits).Enabled } } | Select-Object SkuId, SkuPartNumber, ActiveUnits, ConsumedUnits
+            $MsolSkus = (Get-MgSubscribedSKU -All -Property @("SkuId", "SkuPartNumber", "ConsumedUnits", "PrepaidUnits") | Select-Object *, @{Name = "ActiveUnits"; Expression = { ($_ | Select-Object -ExpandProperty PrepaidUnits).Enabled } } | Select-Object SkuId, SkuPartNumber, ActiveUnits, ConsumedUnits)
             $errorOccured = $False
+			Start-Sleep -Seconds 1
         } catch {
-            $message = $_
+            $message = $_.Exception.Message
             $errorMEssage = "ERROR - Could not get list of all the current Licenses."
             $errorOccured = $True
         }
@@ -2944,30 +2993,32 @@ if($newuser -EQ "N" ) {
             if ($lic_Defender) {
 
                $LicenseParams = @{
-                   AddLicenses = @(
-                       @{
-                           DisabledPlans = @()
-                           SkuId = "$($lic_Defender)" # Defender 1
-                       }
-                       @{
-                           DisabledPlans = @()
-                           SkuId = "$($Allocate)" # E1 / BP
-                       }
-                   )
+					AddLicenses = @(
+						@{
+							DisabledPlans = @()
+							SkuId = "$($lic_Defender)" # Defender 1
+						}
+						@{
+							DisabledPlans = @()
+							SkuId = "$($Allocate)" # E1 / BP
+						}
+					)
                     RemoveLicenses = @()
-               }
+				}
+			   
             } else   {
               $extraMessage =  "ERROR - Not enough Defender (Plan 1) licenses available. `nPurchase New Licenses via RHIPE ( https://www.prismportal.online ) `nUsed: $($lic_DEF_Consumed)"
 
-              $LicenseParams = @{
-                  AddLicenses = @(
-                      @{
-                          DisabledPlans = @()
-                          SkuId = "$($Allocate)" # E1 / BP
-                      }
-                  )
-                   RemoveLicenses = @()
-              }
+				$LicenseParams = @{
+					AddLicenses = @(
+						@{
+							DisabledPlans = @()
+							SkuId = "$($Allocate)" # E1 / BP
+						}
+					)
+					RemoveLicenses = @()
+				}
+				
             } # Defender License
 
         } else {
@@ -2990,6 +3041,7 @@ if($newuser -EQ "N" ) {
 				
 				try {
 					$NewMailbox =  Get-MgUser -filter "UserPrincipalName eq '$($emaillowercase)'"
+					Start-Sleep -Seconds 1
 				} catch { }
 				if($newMailbox) {
 					$loops = 10
@@ -3013,14 +3065,13 @@ if($newuser -EQ "N" ) {
 	
 				try {
 					$NewLic = (Set-MgUserLicense -UserId "$($emaillowercase)" -BodyParameter $LicenseParams)
+					Start-Sleep -Seconds 1
 					$errorOccured = $False
 				} catch {
-					$message = $_
+					$message = $_.Exception.Message
 					$errorMessage =  "ERROR - Allocating a New $LIC License - FAILED `nTry Adding a License to the email account manually via the Office ADMIN Portal. `n$($message)"
 					$errorOccured = $True
 				}
-				
-				Start-Sleep -Seconds 1
 				
 				$UserID = $NewMailbox.id
 				$UserPN = $NewMailbox.UserPrincipalName
@@ -3049,7 +3100,7 @@ if($newuser -EQ "N" ) {
 						Update-MgUserMailboxSetting -UserId $UserPN -BodyParameter $params | Out-Null
 					
 					} catch {
-						$message = $_
+						$message = $_.Exception.Message
 						$errorMessage =  "ERROR - Updating Mailbox Timezone. `n$($message)"
 						$errorOccured = $True
 					}
@@ -3069,7 +3120,7 @@ if($newuser -EQ "N" ) {
 						
 						
 					} catch {
-						$message = $_
+						$message = $_.Exception.Message
 						$errorMessage =  "ERROR - Updating Mailbox Timezone. `n$($message)"
 						$errorOccured = $True
 					}
@@ -3086,7 +3137,6 @@ if($newuser -EQ "N" ) {
 				# $Groupid = (Get-MgGroup | Where-Object {$_.DisplayName -eq "NewSecurityGroup"}).id
 				# New-MgGroupMemberByRef -GroupId $GroupId -BodyParameter $BodyParams
 				# Get-MgGroupMember -GroupId $GroupId
-				
 				
 				$UserBased = $null
 				$allgroups = $null
@@ -3111,8 +3161,10 @@ if($newuser -EQ "N" ) {
 							[System.Windows.Forms.Application]::DoEvents()
 							
 							try {
-								$allGroups = Get-MgGroup -Filter "groupTypes/any(x:x eq 'unified')" -All
-							} catch {}
+								$allGroups = (Get-MgGroup -Filter "groupTypes/any(x:x eq 'unified')" -All)
+							} catch {
+								$message = $_.Exception.Message
+							}
 							Start-Sleep -Seconds 1
 
 							if($allGroups) {
@@ -3131,7 +3183,7 @@ if($newuser -EQ "N" ) {
 											$newmember=(New-MgGroupMember -GroupId $groupID -DirectoryObjectId $UserID | Out-Null)
 											$errorOccured = $False
 										} catch {
-											$message = $_
+											$message = $_.Exception.Message
 											$errorMessage =  "ERROR - Adding User to Azure Group $groupName. `n$($message)"
 											$errorOccured = $True
 										}	
@@ -3159,7 +3211,9 @@ if($newuser -EQ "N" ) {
 							try {
 								Connect-SPOService -url "$SPAdminSite" -Credential $cred | Out-Null
 								$connectedSP = $True
-							} catch {}
+							} catch {
+								$message = $_.Exception.Message
+							}
 						
 							if($connectedSP -eq $True) {
 								$SPUSer = $null
@@ -3170,7 +3224,9 @@ if($newuser -EQ "N" ) {
 									
 									try {
 										$SPUSer = (Get-SPOUser -LoginName $UserPN -Site $SPSite)
-									} catch { }
+									} catch { 
+										$message = $_.Exception.Message
+									}
 									if($SPUSer) {
 										$loops = 10
 										$errorOccured = $False
@@ -3192,7 +3248,11 @@ if($newuser -EQ "N" ) {
 										$labelInfo.Text = "Checking 365 Sharepoint Group '$SPgroup'"
 										[System.Windows.Forms.Application]::DoEvents()
 										
-										$Users = (Get-SPOSiteGroup -Site $SPSite -Group $SPgroup).Users
+										try {
+											$Users = (Get-SPOSiteGroup -Site $SPSite -Group $SPgroup).Users
+										} catch {
+											$message = $_.Exception.Message
+										}
 										
 										if($Users -Contains ($userbasedonpn)) {
 
@@ -3204,7 +3264,7 @@ if($newuser -EQ "N" ) {
 													Add-SPOUser -Group $SPgroup -Site $SPSite -LoginName $UserPN -ErrorAction SilentlyContinue | Out-Null
 													$errorOccured = $False
 												} catch {
-													$message = $_
+													$message = $_.Exception.Message
 													$errorMessage =  "ERROR - Adding $UserPN to SharePoint Group '$SPgroup' `n$($message)"
 													$errorOccured = $True
 												}
@@ -3334,7 +3394,7 @@ if($newuser -EQ "Y") {
 			$created = $True
             } catch {
 
-                $message = $_
+                $message = $_.Exception.Message
                 $errorOccured = $true
         }
            
@@ -3537,11 +3597,11 @@ if($sendmail -ne "" -and $created -eq $True) {
 	
     if($newuser -eq "Y") {      
 
-        $aSubject ="New $($company) Active Directory User - $($emaillowercase)"
+        $aSubject = "New $($company) Active Directory User - $($emaillowercase)"
 
     } else {
 
-        $aSubject ="New $($company) Microsoft Office 365 User - $($emaillowercase)"
+        $aSubject = "New $($company) Microsoft Office 365 User - $($emaillowercase)"
 
     }
 
@@ -3568,7 +3628,15 @@ if($sendmail -ne "" -and $created -eq $True) {
     try {
           Send-MailMessage -To $sendmail -From "newuser@$($EmailDomain)" -Subject $aSubject -BodyAsHtml $Body -SmtpServer $SMTPServer -Port 25 -ErrorAction SilentlyContinue -WarningAction SilentlyContinue > $null
           $sentmail = $true
-        } catch { $sentmail = $false }
+        } catch { 
+			write-debug $_.Exception.Message
+			write-debug "Server:  $($SMTPServer) Port: 25"
+			write-debug "From:    removenewuser@$($EmailDomain)"
+			write-debug "To:      $sendmail "
+			write-debug "Subject: $($aSubJect)"
+			write-debug "$($Body)"
+			$sentmail = $false
+		}
 
 }
 
@@ -3616,38 +3684,3 @@ try {
 #$runspace.powershell.EndInvoke($runspace.Runspace) > $null
 #$runspace.powershell.Runspace.Dispose() # remember to clean up the runspace!
 #$runspace.powershell.dispose()
-
-<#
-
- Start Word Object
-$Word = New-Object -ComObject Word.Application
-
-# Optional to make Word visible
-$Word.Visible = $True
-
-# Open Word doc
-$OpenFile = $Word.Documents.Open("C:\input\Document1.docx")
-
-# Get the content of the doc
-$Content = $OpenFile.Content
-# My name is $name and the reason is $reason.
-
-# New variable for new text and variables to to replace the ones from the doc.
-$newText = ""
-$name = "John Doe"
-$reason = "testing"
-
-# Store the current text in the var
-$newText = $Content.Text
-
-# Replace the template vars with the new values
-$newText = $newText  -replace '\$name', $name
-$newText = $newText  -replace '\$reason', $reason
-
-# Make the modified text the new content and Save
-$Content.Text = $newText
-$OpenFile.Save()
-
-#>
-
-
