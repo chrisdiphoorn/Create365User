@@ -1,7 +1,7 @@
 # Create a new 365 and Active Directory User.
 A PowerShell Script to create a new user with ActiveDirectory and Microsoft Office 365 Tenant.
 
-![Screenshot of Loading Create New 365 User.](./Loading-CreateNewUser.png)
+![Screenshot of Loading Create New 365 User.](./Loading-Create365User.png)
 ![Screenshot of a Create New 365 User.](./CreateNewUser.png)
 
 <sub> References: 
