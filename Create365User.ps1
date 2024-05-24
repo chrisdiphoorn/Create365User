@@ -815,6 +815,7 @@ Install-ModuleIfNotInstalled 'MSOnline' '1.1.183.66'
 Install-ModuleIfNotInstalled 'ExchangeOnlineManagement' '3.2.0'
 Install-ModuleIfNotInstalled 'Microsoft.Graph.Authentication' '2.10.0'
 Install-ModuleIfNotInstalled 'Microsoft.Graph.Users' '2.10.0'
+Install-ModuleIfNotInstalled 'Microsoft.Graph.Users.Actions' '2.10.0'
 Install-ModuleIfNotInstalled 'Microsoft.Graph.Groups' '2.10.0'
 Install-ModuleIfNotInstalled 'Microsoft.Graph.Identity.DirectoryManagement' '2.10.0'
 Install-ModuleIfNotInstalled 'Microsoft.Online.SharePoint.PowerShell' '16.0.24211.12000'
@@ -823,6 +824,7 @@ Install-ModuleIfNotInstalled 'AzureAD' '2.0.2.180'
 Import-Module 'ActiveDirectory' -WarningAction SilentlyContinue
 Import-Module 'Microsoft.Graph.Authentication' -WarningAction SilentlyContinue
 Import-Module 'Microsoft.Graph.Users' -WarningAction SilentlyContinue
+Import-Module 'Microsoft.Graph.Users.Actions' -WarningAction SilentlyContinue
 Import-Module 'Microsoft.Graph.Groups' -WarningAction SilentlyContinue
 Import-Module 'Microsoft.Graph.Identity.DirectoryManagement' -WarningAction SilentlyContinue
 Import-Module 'ExchangeOnlineManagement' -WarningAction SilentlyContinue
@@ -3625,13 +3627,37 @@ if($sendmail -ne "" -and $created -eq $True) {
     
     $body += "</small>"
     
+			$params = @{
+			Message = @{
+				Subject = "$($aSubject)"
+				importance = "Low"   #"High"
+				isDeliveryReceiptRequested = "False"
+				isReadReceiptRequested = "False"
+				Body = @{
+					ContentType = "html"
+					Content = $Body
+				}
+				ToRecipients = @(
+					@{
+						EmailAddress = @{
+							Address = "$sendmail"
+						}
+					}
+				)
+				Flag = @{
+					flagStatus="flagged"
+				}
+	
+			}
+			SaveToSentItems = "false"
+		}
+		
     try {
-          Send-MailMessage -To $sendmail -From "newuser@$($EmailDomain)" -Subject $aSubject -BodyAsHtml $Body -SmtpServer $SMTPServer -Port 25 -ErrorAction SilentlyContinue -WarningAction SilentlyContinue > $null
-          $sentmail = $true
+			Send-MgUserMail -UserId "$($script:ConnectSPOServiceUser)" -BodyParameter $params
+			$sentmail = $true
         } catch { 
 			write-debug $_.Exception.Message
-			write-debug "Server:  $($SMTPServer) Port: 25"
-			write-debug "From:    removenewuser@$($EmailDomain)"
+			write-debug "From:    $($script:ConnectSPOServiceUser))"
 			write-debug "To:      $sendmail "
 			write-debug "Subject: $($aSubJect)"
 			write-debug "$($Body)"
