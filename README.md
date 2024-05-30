@@ -46,6 +46,10 @@ MS Graph Scopes:  `
 'Contacts.Read'
 'Mail.ReadBasic'
 'Group.ReadWrite.All' `
+**4.** You will need to create an SelfSigned Certificate wich is adde to the 365 App
+$cert = New-SelfSignedCertificate -DnsName "USE: Create365User.ini -> ConnectSPOServiceUser" -CertStoreLocation cert:\LocalMachine\My -Type SSLServerAuthentication -NotAfter 2024-01-01 -NotBefore 2029-01-01
+$pwd = ConvertTo-SecureString -String "USE: Create365User.ini -> ActiveDirectoryPassword" -Force -AsPlainText
+Export-PfxCertificate -Cert $cert -FilePath "USE: Create365User.ini -> ConnectSPOServiceUser.pfx" -Password $pwd
 
 **4.** You will need to create an Active Directory user which is a member of the "Domain Admins" Group.
 <sub>
