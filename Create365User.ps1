@@ -5,6 +5,8 @@ Using Namespace System.Windows
 Using Namespace System.Windows.Forms
 Using Namespace System.Management.Automation
 
+$Debug = $True
+
 #$DebugPreference = 'Continue'   		#Turn On Debug
 $DebugPreference = 'SilentlyContinue'   #Turn Off Debug
 
@@ -14,7 +16,7 @@ $DebugPreference = 'SilentlyContinue'   #Turn Off Debug
 $PowershellMode = $host.Runspace.ApartmentState
 
 #if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) { Start-Process powershell.exe "-NoProfile -WindowStyle hidden -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs; exit }
-##Requires -RunAsAdministrator
+##Requires -RunAsAdministrator - Will Prompt to run 
 
 $PSPolicy = 'RemoteSigned'  
 
@@ -42,18 +44,22 @@ function Get-CurrentPath
 $Default = $null
 $cfolder = Get-CurrentPath 
 $IniFile = "$($cFolder)Create365User.ini"
+
 # Read the INI File if it exists
 IF([System.IO.File]::Exists($IniFile) -eq $true) {
 	$Default = Get-Content $IniFile | ConvertFrom-StringData
 }
 
-$script:Tenant = ''
-$script:AzureClientApp = ''
-$script:AzureClientPassword = ''
-$script:ConnectSPOServiceUser = ''
-$script:ConnectSPOServicePassword = ''
-$script:ActiveDirectoryUsername = ''
-$script:ActiveDirectoryPassword = ''
+$script:Tenant = $null
+$script:TenantName = $null
+$script:AzureClientApp = $null
+$script:AzureClientPassword = $null
+$script:ConnectSPOServiceUser = $null
+$script:ConnectSPOServicePassword = $null
+$script:ActiveDirectoryUsername = $null
+$script:ActiveDirectoryPassword = $null
+$script:SecureActiveDirectoryPassword =  $null
+$script:Thumbprint = $null
 
 $OUPath = ""
 
@@ -92,7 +98,6 @@ $WWW = ''
 $EmailDomain = ''
 $SMTPServer = ''
 $SendEmailAddress = ''
-$FromEmailAddress = ''
 
 $AllStaffSigGroup = ''
 $OutlookSigGroup = ''
@@ -100,6 +105,7 @@ $OutlookSigGroup = ''
 # Get all the Default Values from the INI file contents
 if($Default -ne $null) {
 	if($Default.Tenant) { $script:Tenant = $Default.Tenant }
+	if($Default.TenantName) { $script:TenantName = $Default.TenantName }
 	if($Default.AzureClientApp) { $script:AzureClientApp = $Default.AzureClientApp }
 	if($Default.AzureClientPassword) { $script:AzureClientPassword = $Default.AzureClientPassword }
 	if($Default.ConnectSPOServiceUser) { $script:ConnectSPOServiceUser = $Default.ConnectSPOServiceUser }
@@ -151,10 +157,51 @@ if($Default -ne $null) {
 	if($Default.Domain) { $EmailDomain = $Default.Domain}
 	if($Default.SMTPServer) { $SMTPServer = $Default.SMTPServer}
 	if($Default.SendEmail) { $SendEmailAddress = $Default.SendEmail}
-	if($Default.FromEmail) { $FromEmailAddress = $Default.FromEmail}
 	if($Default.GroupOutlook) { $OutlookSigGroup = $Default.GroupOutlook}
 	if($Default.GroupAllStaff) { $AllStaffSigGroup = $Default.GroupAllStaff}
 	
+}
+
+if($script:ConnectSPOServiceUser) {
+	$PFXFile = "$($cFolder)$($script:ConnectSPOServiceUser).pfx"
+} else {
+	$PFXFile = $null
+}
+
+
+if($script:ActiveDirectoryPassword) {
+	# Convert to SecureString
+	$script:SecureActiveDirectoryPassword = ConvertTo-SecureString -String $script:ActiveDirectoryPassword -AsPlainText -Force
+}
+
+#Ensure that the APP Certificate has been installed. This is needed my Exchange-Online
+$FindCert = (Get-ChildItem -Path Cert:\LocalMachine\my| Where-Object {$_.Subject -eq "CN=$($script:ConnectSPOServiceUser)"})
+if  (!$FindCert) {
+		if($script:SecureActiveDirectoryPassword) {		
+			IF([System.IO.File]::Exists($PFXFile) -eq $true) {
+				try {
+					write-debug "Installing Certificate from $($PFXFile)"
+					Start-Process powershell.exe -Wait -Credential $script:SecureActiveDirectoryPassword -ArgumentList ('-c',"Import-PfxCertificate -FilePath $($PFXFile) -CertStoreLocation Cert:\CurrentUser\My -Password $script:SecureActiveDirectoryPassword")
+					#Import-PfxCertificate -Password $script:SecureActiveDirectoryPassword -FilePath "$($PFXFile)" -CertStoreLocation Cert:\LocalMachine\My
+				} catch {
+					write-host $_.Exception.Message
+					pause
+					exit 1
+				}
+			} else {
+				Write-host "Missing Application Certificate CN=$($script:ConnectSPOServiceUser)"
+				pause
+				exit 1
+			}
+		} else {
+			write-host "Missing ActiveDirectoryPassword"
+			Write-host "Missing Application Certificate CN=$($script:ConnectSPOServiceUser)"
+			pause
+			exit 1
+		}
+} else {
+	write-debug "Certificate $FindCert.Name Found - OK"
+	$script:Thumbprint = $FindCert.Thumbprint
 }
 
 
@@ -264,6 +311,15 @@ function MyInvocationPSCommandPath() { return $MyInvocation.PSCommandPath }
 # The name of the powershell script that is curently running
 $ScriptName = "$($MyInvocation.MyCommand.Name)"
 
+$LogFileName = $ScriptName.Replace(".ps1",".log")
+$LOGFile = "$($cFolder)$($LogFileName)"
+IF([System.IO.File]::Exists($LOGFile) -eq $true) {
+	try {
+		Remove-Item -Path $LOGFile -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+	} catch {}
+}
+
+
 # Add the .NET Functions used to create WinForms
 try {
         Add-Type -AssemblyName System.Windows.Forms -WarningAction SilentlyContinue
@@ -271,6 +327,10 @@ try {
         Add-Type -AssemblyName PresentationCore, PresentationFramework -WarningAction SilentlyContinue
 
     } catch {
+		if($LOGFile) {
+			Add-Content -Path $LOGFile $_.Exception.Message
+		}
+		write-debug $_.Exception.Message
         Write-Error -TargetObject $_ -Message "Exception encountered during Environment Setup." -Category ResourceUnavailable
         exit
     }
@@ -741,7 +801,7 @@ Function AddUserToGroup ($group, $dName, $Server)
 $IsAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 $CheckAD = (Get-Module -Name ActiveDirectory -ListAvailable)
 if(-not $CheckAD -AND $IsAdmin -eq $False) {
-	Start-Process powershell.exe "-NoProfile -WindowStyle hidden -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs; exit
+	Start-Process powershell.exe "-sta -NoProfile -WindowStyle hidden -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs; exit
 }
 
 if(-not $CheckAD -AND $IsAdmin -eq $True) {
@@ -2628,6 +2688,10 @@ if($newuser -EQ "N" ) {
 			try {
 				Connect-MgGraph -AccessToken ($Token |ConvertTo-SecureString -AsPlainText -Force) > $null
 			} catch {
+				if($LOGFile) {
+					Add-Content -Path $LOGFile $_.Exception.Message
+				}
+				write-debug $_.Exception.Message
 				$errorOccurred = $true
 			}
 			
@@ -2635,6 +2699,10 @@ if($newuser -EQ "N" ) {
 			try {
                $connection = Connect-MgGraph -AccessToken $Token > $null
 			} catch {
+				if($LOGFile) {
+					Add-Content -Path $LOGFile $_.Exception.Message
+				}
+				write-debug $_.Exception.Message
 				$errorOccurred = $true
 			}
 			
@@ -2651,6 +2719,7 @@ if($newuser -EQ "N" ) {
 			Write-Host "Authentication with Microsoft Graph Was Canceled or Failed."
 			Write-Host $_
 			
+            [void]$main_form.Dispose()
             [void]$main_form.Dispose()
             [void]$formRunning.Close()
             [void]$formRunning.Dispose()
@@ -2712,9 +2781,6 @@ if($newuser -EQ "N" ) {
 			$errorOccured = $True
 
 		}
-		
-		
-		
 	  
 	}
 	
@@ -2760,7 +2826,10 @@ if($newuser -EQ "N" ) {
             Start-Sleep -Seconds 1.5
 
         } catch {
-
+			if($LOGFile) {
+					Add-Content -Path $LOGFile $_.Exception.Message
+				}
+				write-debug $_.Exception.Message
             $message = $_.Exception.Message
             $errorMEssage = "ERROR - Could not create a new email account $($emaillowercase) `n$($message)"
             $errorOccured = $True
@@ -2782,6 +2851,10 @@ if($newuser -EQ "N" ) {
 					$errorOccured = $false
 					Start-Sleep -Seconds 1
 				} catch { 
+					if($LOGFile) {
+						Add-Content -Path $LOGFile $_.Exception.Message
+					}
+					write-debug $_.Exception.Message
 					$message = $_.Exception.Message
 					$errorMEssage = "ERROR - Could add a manager '$($manager)' to the users account."
 					$errorOccured = $True
@@ -2825,6 +2898,10 @@ if($newuser -EQ "N" ) {
             $errorOccured = $False
 			Start-Sleep -Seconds 1
         } catch {
+			if($LOGFile) {
+				Add-Content -Path $LOGFile $_.Exception.Message
+			}
+			write-debug $_.Exception.Message
             $message = $_.Exception.Message
             $errorMEssage = "ERROR - Could not get list of all the current Licenses."
             $errorOccured = $True
@@ -3070,6 +3147,10 @@ if($newuser -EQ "N" ) {
 					Start-Sleep -Seconds 1
 					$errorOccured = $False
 				} catch {
+					if($LOGFile) {
+						Add-Content -Path $LOGFile $_.Exception.Message
+					}
+					write-debug $_.Exception.Message
 					$message = $_.Exception.Message
 					$errorMessage =  "ERROR - Allocating a New $LIC License - FAILED `nTry Adding a License to the email account manually via the Office ADMIN Portal. `n$($message)"
 					$errorOccured = $True
@@ -3165,6 +3246,10 @@ if($newuser -EQ "N" ) {
 							try {
 								$allGroups = (Get-MgGroup -Filter "groupTypes/any(x:x eq 'unified')" -All)
 							} catch {
+								if($LOGFile) {
+									Add-Content -Path $LOGFile $_.Exception.Message
+								}
+								write-debug $_.Exception.Message
 								$message = $_.Exception.Message
 							}
 							Start-Sleep -Seconds 1
@@ -3182,9 +3267,13 @@ if($newuser -EQ "N" ) {
 										[System.Windows.Forms.Application]::DoEvents()
 																					
 										try {
-											$newmember=(New-MgGroupMember -GroupId $groupID -DirectoryObjectId $UserID | Out-Null)
+											$newmember=(New-MgGroupMember -GroupId $groupID -DirectoryObjectId $UserID -ErrorAction SilentlyContinue | Out-Null)
 											$errorOccured = $False
 										} catch {
+											if($LOGFile) {
+												Add-Content -Path $LOGFile $_.Exception.Message
+											}
+											write-debug $_.Exception.Message
 											$message = $_.Exception.Message
 											$errorMessage =  "ERROR - Adding User to Azure Group $groupName. `n$($message)"
 											$errorOccured = $True
@@ -3214,6 +3303,10 @@ if($newuser -EQ "N" ) {
 								Connect-SPOService -url "$SPAdminSite" -Credential $cred | Out-Null
 								$connectedSP = $True
 							} catch {
+								if($LOGFile) {
+									Add-Content -Path $LOGFile $_.Exception.Message
+								}
+								write-debug $_.Exception.Message
 								$message = $_.Exception.Message
 							}
 						
@@ -3227,6 +3320,10 @@ if($newuser -EQ "N" ) {
 									try {
 										$SPUSer = (Get-SPOUser -LoginName $UserPN -Site $SPSite)
 									} catch { 
+										if($LOGFile) {
+											Add-Content -Path $LOGFile $_.Exception.Message
+										}
+										write-debug $_.Exception.Message
 										$message = $_.Exception.Message
 									}
 									if($SPUSer) {
@@ -3253,6 +3350,10 @@ if($newuser -EQ "N" ) {
 										try {
 											$Users = (Get-SPOSiteGroup -Site $SPSite -Group $SPgroup).Users
 										} catch {
+											if($LOGFile) {
+												Add-Content -Path $LOGFile $_.Exception.Message
+											}
+											write-debug $_.Exception.Message
 											$message = $_.Exception.Message
 										}
 										
@@ -3266,6 +3367,10 @@ if($newuser -EQ "N" ) {
 													Add-SPOUser -Group $SPgroup -Site $SPSite -LoginName $UserPN -ErrorAction SilentlyContinue | Out-Null
 													$errorOccured = $False
 												} catch {
+													if($LOGFile) {
+														Add-Content -Path $LOGFile $_.Exception.Message
+													}
+													write-debug $_.Exception.Message
 													$message = $_.Exception.Message
 													$errorMessage =  "ERROR - Adding $UserPN to SharePoint Group '$SPgroup' `n$($message)"
 													$errorOccured = $True
@@ -3395,7 +3500,10 @@ if($newuser -EQ "Y") {
 		    $errorOccured = $false
 			$created = $True
             } catch {
-
+				if($LOGFile) {
+					Add-Content -Path $LOGFile $_.Exception.Message
+				}
+				write-debug $_.Exception.Message
                 $message = $_.Exception.Message
                 $errorOccured = $true
         }
@@ -3626,7 +3734,8 @@ if($sendmail -ne "" -and $created -eq $True) {
     }
     
     $body += "</small>"
-    
+    $sentmail = $true
+	
 			$params = @{
 			Message = @{
 				Subject = "$($aSubject)"
@@ -3656,6 +3765,9 @@ if($sendmail -ne "" -and $created -eq $True) {
 			Send-MgUserMail -UserId "$($script:ConnectSPOServiceUser)" -BodyParameter $params
 			$sentmail = $true
         } catch { 
+			if($LOGFile) {
+				Add-Content -Path $LOGFile $_.Exception.Message
+			}
 			write-debug $_.Exception.Message
 			write-debug "From:    $($script:ConnectSPOServiceUser))"
 			write-debug "To:      $sendmail "
@@ -3688,6 +3800,7 @@ if ($errorOccured -eq $false) {
 
 try {
 	Disconnect-MgGraph -ErrorAction Ignore > $null
+	Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
 } catch {}
 
 Stop-JobTracker
@@ -3698,7 +3811,9 @@ Remove_All_Controls($formRunning)
 
 try {
 	Remove-Module -Name ActiveDirectory -Force > $null
+	Remove-Module -Name Microsoft.Graph.Authentication -Force > $null
 	Remove-Module -Name Microsoft.Graph.Users -Force > $null
+	Remove-Module -Name Microsoft.Graph.Users.Actions -Force > $null
 	Remove-Module -Name Microsoft.Graph.Groups -Force > $null
 	Remove-Module -Name Microsoft.Graph.Identity.DirectoryManagement -Force > $null
 	Remove-Module -Name ExchangeOnlineManagement -Force > $null
