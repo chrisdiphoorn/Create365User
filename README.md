@@ -22,14 +22,23 @@ A PowerShell Script to create a new user in an ActiveDirectory Domain or a Micro
 **2.** You will need to create a 365 Entra App that has access to the Exchange.
 <sub>
 Microsoft Graph		User.Read						Sign in and read user profile					Delegated		Admin consent	An administrator
+
 Microsoft Graph		Mail.ReadWrite					Read and write mail in all mailboxes			Application		Admin consent	An administrator
+
 Microsoft Graph		User.ReadWrite.All				Read and write all users' full profiles			Application		Admin consent	An administrator
+
 Microsoft Graph		Calendars.Read					Read calendars in all mailboxes					Application		Admin consent	An administrator
+
 Microsoft Graph		Mail.ReadBasic.All				Read basic mail in all mailboxes				Application		Admin consent	An administrator
+
 Microsoft Graph 	Application.ReadWrite.All		Read and write all applications					Application		Admin consent	An administrator
+
 Microsoft Graph		Directory.ReadWrite.All			Read and write directory data					Application		Admin consent	An administrator
+
 Microsoft Graph		MailboxSettings.Read			Read all user mailbox settings					Application		Admin consent	An administrator
+
 Microsoft Graph		Sites.ReadWrite.All				Read and write items in all site collections	Application		Admin consent	An administrator
+
 Microsoft Graph		Contacts.ReadWrite				Read and write contacts in all mailboxes		Application		Admin consent	An administrator
 Microsoft Graph		Group.ReadWrite.All				Read and write all groups						Application		Admin consent	An administrator
 Microsoft Graph		Directory.Read.All				Read directory data								Application		Admin consent	An administrator
