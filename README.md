@@ -46,6 +46,7 @@ MS Graph Scopes:  `
 'Contacts.Read'
 'Mail.ReadBasic'
 'Group.ReadWrite.All' `
+
 **4.** You will need to create an SelfSigned Certificate wich is adde to the 365 App
 ```powershell
 $cert = New-SelfSignedCertificate -DnsName "USE: Create365User.ini -> ConnectSPOServiceUser" -CertStoreLocation cert:\LocalMachine\My -Type SSLServerAuthentication -NotAfter 2024-01-01 -NotBefore 2029-01-01
