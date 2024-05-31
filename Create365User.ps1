@@ -7,8 +7,8 @@ Using Namespace System.Management.Automation
 
 $Debug = $True
 
-#$DebugPreference = 'Continue'   		#Turn On Debug
-$DebugPreference = 'SilentlyContinue'   #Turn Off Debug
+$DebugPreference = 'Continue'   		#Turn On Debug
+#$DebugPreference = 'SilentlyContinue'   #Turn Off Debug
 
 # MTA - Multi-Threaded Apartment
 # STA - Single Threaded Apartment - for TextBox, ComboBox, DataGrid, Form Top = True
@@ -58,7 +58,6 @@ $script:ConnectSPOServiceUser = $null
 $script:ConnectSPOServicePassword = $null
 $script:ActiveDirectoryUsername = $null
 $script:ActiveDirectoryPassword = $null
-$script:SecureActiveDirectoryPassword =  $null
 $script:Thumbprint = $null
 
 $OUPath = ""
@@ -162,48 +161,21 @@ if($Default -ne $null) {
 	
 }
 
-if($script:ConnectSPOServiceUser) {
-	$PFXFile = "$($cFolder)$($script:ConnectSPOServiceUser).pfx"
-} else {
-	$PFXFile = $null
-}
-
-
-if($script:ActiveDirectoryPassword) {
-	# Convert to SecureString
-	$script:SecureActiveDirectoryPassword = ConvertTo-SecureString -String $script:ActiveDirectoryPassword -AsPlainText -Force
-}
-
 #Ensure that the APP Certificate has been installed. This is needed my Exchange-Online
 $FindCert = (Get-ChildItem -Path Cert:\LocalMachine\my| Where-Object {$_.Subject -eq "CN=$($script:ConnectSPOServiceUser)"})
 if  (!$FindCert) {
-		if($script:SecureActiveDirectoryPassword) {		
-			IF([System.IO.File]::Exists($PFXFile) -eq $true) {
-				try {
-					write-debug "Installing Certificate from $($PFXFile)"
-					Start-Process powershell.exe -Wait -Credential $script:SecureActiveDirectoryPassword -ArgumentList ('-c',"Import-PfxCertificate -FilePath $($PFXFile) -CertStoreLocation Cert:\CurrentUser\My -Password $script:SecureActiveDirectoryPassword")
-					#Import-PfxCertificate -Password $script:SecureActiveDirectoryPassword -FilePath "$($PFXFile)" -CertStoreLocation Cert:\LocalMachine\My
-				} catch {
-					write-host $_.Exception.Message
-					pause
-					exit 1
-				}
-			} else {
-				Write-host "Missing Application Certificate CN=$($script:ConnectSPOServiceUser)"
-				pause
-				exit 1
-			}
-		} else {
-			write-host "Missing ActiveDirectoryPassword"
 			Write-host "Missing Application Certificate CN=$($script:ConnectSPOServiceUser)"
 			pause
 			exit 1
-		}
 } else {
 	write-debug "Certificate $FindCert.Name Found - OK"
 	$script:Thumbprint = $FindCert.Thumbprint
 }
+if($script:ActiveDirectoryPassword) {
+	$script:SecureActiveDirectoryPassword = ConvertTo-SecureString $script:ActiveDirectoryPassword -AsPlainText -Force
+}
 
+$ADCredential = New-Object System.Management.Automation.PSCredential -ArgumentList $script:ActiveDirectoryUsername, $script:SecureActiveDirectoryPassword
 
 # KeyPress codes that wont work in a textbox
 $invalidKeys =@('next','multiply','OemBackslash','OemClear','OemCloseBrackets','Oemcomma', 'OemOpenBrackets','OemPipe','Oemplus','OemQuestion','OemQuotes','OemSemicolon','Oemtilde','Oem5','Oem6','d3','d4','d5','d6','d7','d8','d9','divide')
@@ -327,10 +299,13 @@ try {
         Add-Type -AssemblyName PresentationCore, PresentationFramework -WarningAction SilentlyContinue
 
     } catch {
+		$e = $_.Exception
+		$line = $_.Exception.InvocationInfo.ScriptLineNumber
+		$msg = $e.Message 
 		if($LOGFile) {
-			Add-Content -Path $LOGFile $_.Exception.Message
+			Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 		}
-		write-debug $_.Exception.Message
+		write-debug "caught exception: $e at $line"
         Write-Error -TargetObject $_ -Message "Exception encountered during Environment Setup." -Category ResourceUnavailable
         exit
     }
@@ -866,6 +841,19 @@ function Dispose-All-Variables {
 				$_.Value.Dispose() | Remove-Variable -Force
 			} catch {}
         }
+}
+
+Function Write-Log {
+    param(
+        [Parameter(Mandatory = $true)][string] $message,
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("INFO","WARN","ERROR")]
+        [string] $level = "INFO"
+    )
+    # Create timestamp
+    $timestamp = (Get-Date).toString("dd/MM/yyyy HH:mm:ss")
+    # Append content to log file
+    Add-Content -Path $logFile -Value "$timestamp [$level] - $message"
 }
 
 #Ensure Powershell uses TLS when connecting over the network.
@@ -2688,10 +2676,13 @@ if($newuser -EQ "N" ) {
 			try {
 				Connect-MgGraph -AccessToken ($Token |ConvertTo-SecureString -AsPlainText -Force) > $null
 			} catch {
+				$e = $_.Exception
+				$line = $_.Exception.InvocationInfo.ScriptLineNumber
+				$msg = $e.Message 
 				if($LOGFile) {
-					Add-Content -Path $LOGFile $_.Exception.Message
+					Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 				}
-				write-debug $_.Exception.Message
+				write-debug "caught exception: $e at $line"
 				$errorOccurred = $true
 			}
 			
@@ -2699,10 +2690,13 @@ if($newuser -EQ "N" ) {
 			try {
                $connection = Connect-MgGraph -AccessToken $Token > $null
 			} catch {
+				$e = $_.Exception
+				$line = $_.Exception.InvocationInfo.ScriptLineNumber
+				$msg = $e.Message 
 				if($LOGFile) {
-					Add-Content -Path $LOGFile $_.Exception.Message
+					Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 				}
-				write-debug $_.Exception.Message
+				write-debug "caught exception: $e at $line"
 				$errorOccurred = $true
 			}
 			
@@ -2826,10 +2820,14 @@ if($newuser -EQ "N" ) {
             Start-Sleep -Seconds 1.5
 
         } catch {
-			if($LOGFile) {
-					Add-Content -Path $LOGFile $_.Exception.Message
+				$e = $_.Exception
+				$line = $_.Exception.InvocationInfo.ScriptLineNumber
+				$msg = $e.Message 
+				if($LOGFile) {
+					Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 				}
-				write-debug $_.Exception.Message
+				write-debug "caught exception: $e at $line"
+
             $message = $_.Exception.Message
             $errorMEssage = "ERROR - Could not create a new email account $($emaillowercase) `n$($message)"
             $errorOccured = $True
@@ -2851,10 +2849,14 @@ if($newuser -EQ "N" ) {
 					$errorOccured = $false
 					Start-Sleep -Seconds 1
 				} catch { 
+					$e = $_.Exception
+					$line = $_.Exception.InvocationInfo.ScriptLineNumber
+					$msg = $e.Message 
 					if($LOGFile) {
-						Add-Content -Path $LOGFile $_.Exception.Message
+						Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 					}
-					write-debug $_.Exception.Message
+					write-debug "caught exception: $e at $line"
+
 					$message = $_.Exception.Message
 					$errorMEssage = "ERROR - Could add a manager '$($manager)' to the users account."
 					$errorOccured = $True
@@ -2898,10 +2900,14 @@ if($newuser -EQ "N" ) {
             $errorOccured = $False
 			Start-Sleep -Seconds 1
         } catch {
+			$e = $_.Exception
+			$line = $_.Exception.InvocationInfo.ScriptLineNumber
+			$msg = $e.Message 
 			if($LOGFile) {
-				Add-Content -Path $LOGFile $_.Exception.Message
+				Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 			}
-			write-debug $_.Exception.Message
+			write-debug "caught exception: $e at $line"
+
             $message = $_.Exception.Message
             $errorMEssage = "ERROR - Could not get list of all the current Licenses."
             $errorOccured = $True
@@ -3147,10 +3153,14 @@ if($newuser -EQ "N" ) {
 					Start-Sleep -Seconds 1
 					$errorOccured = $False
 				} catch {
+					$e = $_.Exception
+					$line = $_.Exception.InvocationInfo.ScriptLineNumber
+					$msg = $e.Message 
 					if($LOGFile) {
-						Add-Content -Path $LOGFile $_.Exception.Message
+						Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 					}
-					write-debug $_.Exception.Message
+					write-debug "caught exception: $e at $line"
+
 					$message = $_.Exception.Message
 					$errorMessage =  "ERROR - Allocating a New $LIC License - FAILED `nTry Adding a License to the email account manually via the Office ADMIN Portal. `n$($message)"
 					$errorOccured = $True
@@ -3246,10 +3256,14 @@ if($newuser -EQ "N" ) {
 							try {
 								$allGroups = (Get-MgGroup -Filter "groupTypes/any(x:x eq 'unified')" -All)
 							} catch {
+								$e = $_.Exception
+								$line = $_.Exception.InvocationInfo.ScriptLineNumber
+								$msg = $e.Message 
 								if($LOGFile) {
-									Add-Content -Path $LOGFile $_.Exception.Message
+									Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 								}
-								write-debug $_.Exception.Message
+								write-debug "caught exception: $e at $line"
+
 								$message = $_.Exception.Message
 							}
 							Start-Sleep -Seconds 1
@@ -3270,10 +3284,14 @@ if($newuser -EQ "N" ) {
 											$newmember=(New-MgGroupMember -GroupId $groupID -DirectoryObjectId $UserID -ErrorAction SilentlyContinue | Out-Null)
 											$errorOccured = $False
 										} catch {
+											$e = $_.Exception
+											$line = $_.Exception.InvocationInfo.ScriptLineNumber
+											$msg = $e.Message 
 											if($LOGFile) {
-												Add-Content -Path $LOGFile $_.Exception.Message
+												Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 											}
-											write-debug $_.Exception.Message
+											write-debug "caught exception: $e at $line"
+
 											$message = $_.Exception.Message
 											$errorMessage =  "ERROR - Adding User to Azure Group $groupName. `n$($message)"
 											$errorOccured = $True
@@ -3303,10 +3321,14 @@ if($newuser -EQ "N" ) {
 								Connect-SPOService -url "$SPAdminSite" -Credential $cred | Out-Null
 								$connectedSP = $True
 							} catch {
+								$e = $_.Exception
+								$line = $_.Exception.InvocationInfo.ScriptLineNumber
+								$msg = $e.Message 
 								if($LOGFile) {
-									Add-Content -Path $LOGFile $_.Exception.Message
+									Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 								}
-								write-debug $_.Exception.Message
+								write-debug "caught exception: $e at $line"
+
 								$message = $_.Exception.Message
 							}
 						
@@ -3320,10 +3342,13 @@ if($newuser -EQ "N" ) {
 									try {
 										$SPUSer = (Get-SPOUser -LoginName $UserPN -Site $SPSite)
 									} catch { 
+										$e = $_.Exception
+										$line = $_.Exception.InvocationInfo.ScriptLineNumber
+										$msg = $e.Message 
 										if($LOGFile) {
-											Add-Content -Path $LOGFile $_.Exception.Message
+											Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 										}
-										write-debug $_.Exception.Message
+										write-debug "caught exception: $e at $line"
 										$message = $_.Exception.Message
 									}
 									if($SPUSer) {
@@ -3350,10 +3375,13 @@ if($newuser -EQ "N" ) {
 										try {
 											$Users = (Get-SPOSiteGroup -Site $SPSite -Group $SPgroup).Users
 										} catch {
+											$e = $_.Exception
+											$line = $_.Exception.InvocationInfo.ScriptLineNumber
+											$msg = $e.Message 
 											if($LOGFile) {
-												Add-Content -Path $LOGFile $_.Exception.Message
+												Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 											}
-											write-debug $_.Exception.Message
+											write-debug "caught exception: $e at $line"
 											$message = $_.Exception.Message
 										}
 										
@@ -3500,10 +3528,13 @@ if($newuser -EQ "Y") {
 		    $errorOccured = $false
 			$created = $True
             } catch {
+				$e = $_.Exception
+				$line = $_.Exception.InvocationInfo.ScriptLineNumber
+				$msg = $e.Message 
 				if($LOGFile) {
-					Add-Content -Path $LOGFile $_.Exception.Message
+					Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 				}
-				write-debug $_.Exception.Message
+				write-debug "caught exception: $e at $line"
                 $message = $_.Exception.Message
                 $errorOccured = $true
         }
@@ -3765,10 +3796,13 @@ if($sendmail -ne "" -and $created -eq $True) {
 			Send-MgUserMail -UserId "$($script:ConnectSPOServiceUser)" -BodyParameter $params
 			$sentmail = $true
         } catch { 
+			$e = $_.Exception
+			$line = $_.Exception.InvocationInfo.ScriptLineNumber
+			$msg = $e.Message 
 			if($LOGFile) {
-				Add-Content -Path $LOGFile $_.Exception.Message
+				Add-Content -Path $LOGFile -Value "ERROR: $e at $line"
 			}
-			write-debug $_.Exception.Message
+			write-debug "caught exception: $e at $line"
 			write-debug "From:    $($script:ConnectSPOServiceUser))"
 			write-debug "To:      $sendmail "
 			write-debug "Subject: $($aSubJect)"
@@ -3819,6 +3853,7 @@ try {
 	Remove-Module -Name ExchangeOnlineManagement -Force > $null
 	Remove-Module -Name Microsoft.Online.SharePoint.PowerShell -Force > $null
 	Remove-Module -Name AzureAD -Force > $null
+	Remove-Module -Name Microsoft.Graph -Force -ErrorAction SilentlyContinue> $null
 	} catch {}
 	
 
